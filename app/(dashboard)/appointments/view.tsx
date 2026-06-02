@@ -1,6 +1,6 @@
 'use client'
 import { useState, useTransition } from 'react'
-import { Plus, ChevronLeft, ChevronRight, Search, Loader2, X, Check, Download } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight, Search, Loader2, X, Check, Download, FileDown } from 'lucide-react'
 import { updateAppointmentStatus, createAppointment } from '@/lib/actions/appointments'
 import { formatCurrency, cn } from '@/lib/utils'
 import type { Client, Staff, Service } from '@/lib/types'
@@ -122,6 +122,28 @@ export function AppointmentsView({
       await updateAppointmentStatus(id, status)
       setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a))
       setUpdating(null)
+    })
+  }
+
+  async function handleDownloadReceipt(apt: Apt) {
+    const { downloadServiceReceipt } = await import('@/lib/pdf')
+    await downloadServiceReceipt({
+      id:            apt.id,
+      clientName:    apt.clientName ?? apt.client?.name ?? '',
+      clientPhone:   apt.clientPhone ?? apt.client?.phone ?? '',
+      staffName:     apt.staffName ?? apt.staff?.name ?? '',
+      date:          apt.date,
+      startTime:     apt.startTime,
+      endTime:       apt.endTime,
+      totalPrice:    apt.totalPrice,
+      paymentStatus: apt.paymentStatus,
+      locationName:  apt.locationName ?? null,
+      notes:         apt.notes ?? null,
+      services:      (apt.services ?? []).map((s: any) => ({
+        name:     s.name ?? s.service?.name ?? '',
+        price:    s.price ?? 0,
+        duration: s.duration ?? 0,
+      })),
     })
   }
 
@@ -269,6 +291,11 @@ export function AppointmentsView({
                       )}
                     {apt.status === 'in-progress' && !updating && (
                       <button onClick={() => handleStatusChange(apt.id, 'completed')} className="btn-ghost text-xs h-7 px-2 text-green-600">Complete</button>
+                    )}
+                    {apt.status === 'completed' && !updating && (
+                      <button onClick={() => handleDownloadReceipt(apt)} className="btn-ghost h-7 w-7 p-0 justify-center" title="Download receipt">
+                        <FileDown className="h-3.5 w-3.5" />
+                      </button>
                     )}
                   </td>
                 </tr>

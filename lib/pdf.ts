@@ -3,6 +3,191 @@ import type { StaffWithStats, Apprentice } from '@/lib/types'
 
 const GHS = (n: number) => `GHS ${n.toFixed(2)}`
 
+function addWeeks(dateStr: string, weeks: number): string {
+  const d = new Date(dateStr)
+  d.setDate(d.getDate() + weeks * 7)
+  return d.toLocaleDateString('en-GH', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+export async function downloadServiceReceipt(apt: {
+  id: string
+  clientName: string
+  clientPhone: string
+  staffName: string
+  date: string
+  startTime: string
+  endTime: string
+  totalPrice: number
+  paymentStatus: string
+  locationName?: string | null
+  notes?: string | null
+  services: { name: string; price: number; duration: number }[]
+}) {
+  const { jsPDF } = await import('jspdf')
+  const doc    = new jsPDF({ unit: 'mm', format: 'a5' })
+  const pageW  = doc.internal.pageSize.getWidth()
+  const margin = 16
+  let y        = margin
+
+  // ── Header ──────────────────────────────────────────────────────────────
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(18)
+  doc.setTextColor(20, 20, 20)
+  doc.text('Luxe Beauty Studio', pageW / 2, y, { align: 'center' })
+  y += 6
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(120, 120, 120)
+  doc.text('Where Beauty Meets Excellence', pageW / 2, y, { align: 'center' })
+  if (apt.locationName) {
+    y += 4
+    doc.text(apt.locationName, pageW / 2, y, { align: 'center' })
+  }
+
+  // Gold rule
+  y += 6
+  doc.setDrawColor(180, 140, 60)
+  doc.setLineWidth(0.8)
+  doc.line(margin, y, pageW - margin, y)
+  y += 5
+
+  // ── Title + meta ─────────────────────────────────────────────────────────
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(12)
+  doc.setTextColor(30, 30, 30)
+  doc.text('Service Receipt', pageW / 2, y, { align: 'center' })
+  y += 6
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8.5)
+  doc.setTextColor(80, 80, 80)
+  const receiptNo = `RCP-${apt.date.replace(/-/g, '')}-${apt.id.slice(-4).toUpperCase()}`
+  doc.text(`Receipt No: ${receiptNo}`, margin, y)
+  doc.text(new Date(apt.date).toLocaleDateString('en-GH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }), pageW - margin, y, { align: 'right' })
+  y += 5
+  doc.text(`Time: ${apt.startTime} – ${apt.endTime}`, margin, y)
+  y += 8
+
+  // ── Client & Staff ────────────────────────────────────────────────────────
+  doc.setFillColor(248, 248, 248)
+  doc.roundedRect(margin, y, pageW - margin * 2, 18, 2, 2, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.setTextColor(100, 100, 100)
+  doc.text('CLIENT', margin + 4, y + 5)
+  doc.text('ATTENDED BY', pageW / 2 + 4, y + 5)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(10)
+  doc.setTextColor(20, 20, 20)
+  doc.text(apt.clientName, margin + 4, y + 12)
+  doc.setFontSize(8)
+  doc.setTextColor(80, 80, 80)
+  doc.text(apt.clientPhone, margin + 4, y + 16)
+  doc.setFontSize(10)
+  doc.setTextColor(20, 20, 20)
+  doc.text(apt.staffName, pageW / 2 + 4, y + 12)
+  y += 24
+
+  // ── Services table ────────────────────────────────────────────────────────
+  doc.setFillColor(30, 30, 30)
+  doc.rect(margin, y, pageW - margin * 2, 7, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.setTextColor(255, 255, 255)
+  doc.text('Service', margin + 3, y + 4.5)
+  doc.text('Duration', pageW - margin - 42, y + 4.5)
+  doc.text('Price', pageW - margin - 3, y + 4.5, { align: 'right' })
+  y += 9
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  apt.services.forEach((svc, i) => {
+    if (i % 2 === 0) {
+      doc.setFillColor(252, 252, 252)
+      doc.rect(margin, y - 1.5, pageW - margin * 2, 7, 'F')
+    }
+    doc.setTextColor(30, 30, 30)
+    doc.text(svc.name, margin + 3, y + 3.5)
+    doc.setTextColor(100, 100, 100)
+    doc.text(`${svc.duration} min`, pageW - margin - 42, y + 3.5)
+    doc.setTextColor(30, 30, 30)
+    doc.text(GHS(svc.price), pageW - margin - 3, y + 3.5, { align: 'right' })
+    y += 7
+  })
+
+  // ── Total ─────────────────────────────────────────────────────────────────
+  y += 2
+  doc.setDrawColor(220, 220, 220)
+  doc.setLineWidth(0.3)
+  doc.line(margin, y, pageW - margin, y)
+  y += 5
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(12)
+  doc.setTextColor(20, 20, 20)
+  doc.text('Total', margin + 3, y)
+  doc.text(GHS(apt.totalPrice), pageW - margin - 3, y, { align: 'right' })
+  y += 5
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  const paid = apt.paymentStatus === 'paid'
+  doc.setTextColor(paid ? 40 : 180, paid ? 140 : 80, paid ? 80 : 30)
+  doc.text(paid ? '✓ Paid' : apt.paymentStatus.toUpperCase(), margin + 3, y)
+  y += 8
+
+  // ── Notes ─────────────────────────────────────────────────────────────────
+  if (apt.notes) {
+    doc.setDrawColor(230, 230, 230)
+    doc.setLineWidth(0.3)
+    doc.line(margin, y, pageW - margin, y)
+    y += 4
+    doc.setFont('helvetica', 'italic')
+    doc.setFontSize(8)
+    doc.setTextColor(120, 120, 120)
+    const noteLines = doc.splitTextToSize(`Note: ${apt.notes}`, pageW - margin * 2 - 6)
+    doc.text(noteLines, margin + 3, y)
+    y += noteLines.length * 4 + 4
+  }
+
+  // ── Next visit ────────────────────────────────────────────────────────────
+  y += 2
+  doc.setDrawColor(180, 140, 60)
+  doc.setLineWidth(0.5)
+  doc.line(margin, y, pageW - margin, y)
+  y += 6
+
+  doc.setFillColor(255, 252, 240)
+  doc.roundedRect(margin, y, pageW - margin * 2, 14, 2, 2, 'F')
+  doc.setDrawColor(180, 140, 60)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(margin, y, pageW - margin * 2, 14, 2, 2, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.setTextColor(140, 100, 20)
+  doc.text('NEXT RECOMMENDED VISIT', margin + 4, y + 5)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(10)
+  doc.setTextColor(80, 60, 10)
+  doc.text(addWeeks(apt.date, 4), margin + 4, y + 11)
+  doc.setFontSize(8)
+  doc.setTextColor(150, 120, 40)
+  doc.text('We recommend every 4 weeks for best results', pageW - margin - 3, y + 11, { align: 'right' })
+  y += 20
+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  doc.setFont('helvetica', 'italic')
+  doc.setFontSize(9)
+  doc.setTextColor(120, 120, 120)
+  doc.text('Thank you for choosing Luxe Beauty Studio!', pageW / 2, y, { align: 'center' })
+  y += 5
+  doc.setFontSize(7.5)
+  doc.text('We look forward to seeing you again soon.', pageW / 2, y, { align: 'center' })
+
+  doc.save(`receipt-${apt.clientName.replace(/\s+/g, '-')}-${apt.date}.pdf`)
+}
+
 const PM: Record<string, string> = {
   momo: 'Mobile Money', card: 'Card', transfer: 'Bank Transfer', cash: 'Cash',
 }
