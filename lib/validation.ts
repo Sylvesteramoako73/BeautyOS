@@ -69,7 +69,8 @@ export const ApprenticeSchema = z.object({
   stage:                  z.enum(['beginner', 'intermediate', 'advanced']),
   startDate:              isoDate,
   expectedGraduationDate: isoDate.nullable().optional().or(z.literal('')),
-  specialtiesLearning:    z.string().max(300).optional(),
+  programDurationMonths:  z.number().int().min(1).max(120).nullable().optional(),
+  specialtiesLearning:    z.string().max(500).optional(),
   stipend:                z.number().min(0).max(1_000_000).nullable().optional(),
   notes:                  z.string().max(1000).optional(),
 })

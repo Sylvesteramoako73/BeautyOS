@@ -1,5 +1,5 @@
 import type { Invoice } from '@/lib/actions/invoices'
-import type { StaffWithStats } from '@/lib/types'
+import type { StaffWithStats, Apprentice } from '@/lib/types'
 
 const GHS = (n: number) => `GHS ${n.toFixed(2)}`
 
@@ -215,4 +215,132 @@ export async function downloadStaffReportPDF(
   doc.text('Luxe Beauty Studio — Confidential', pageW / 2, y, { align: 'center' })
 
   doc.save(`staff-report-${member.name.replace(/\s+/g, '-')}-${period.start}.pdf`)
+}
+
+export async function downloadApprenticeCertificate(apprentice: Apprentice) {
+  const { jsPDF } = await import('jspdf')
+  const doc    = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' })
+  const pageW  = doc.internal.pageSize.getWidth()
+  const pageH  = doc.internal.pageSize.getHeight()
+  const cx     = pageW / 2
+
+  // Gold double border
+  doc.setDrawColor(180, 140, 60)
+  doc.setLineWidth(3)
+  doc.rect(8, 8, pageW - 16, pageH - 16)
+  doc.setLineWidth(0.6)
+  doc.rect(13, 13, pageW - 26, pageH - 26)
+
+  // Corner ornaments
+  const corners = [[18, 18], [pageW - 18, 18], [18, pageH - 18], [pageW - 18, pageH - 18]] as const
+  corners.forEach(([x, y]) => {
+    doc.setFillColor(180, 140, 60)
+    doc.circle(x, y, 2, 'F')
+  })
+
+  // Salon name
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.setTextColor(140, 100, 30)
+  doc.text('LUXE BEAUTY STUDIO', cx, 28, { align: 'center' })
+
+  // Gold divider
+  doc.setDrawColor(180, 140, 60)
+  doc.setLineWidth(0.8)
+  doc.line(50, 33, pageW - 50, 33)
+
+  // Title
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(30)
+  doc.setTextColor(30, 30, 30)
+  doc.text('Certificate of Completion', cx, 50, { align: 'center' })
+
+  // Subtitle
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(12)
+  doc.setTextColor(100, 100, 100)
+  doc.text('This is to certify that', cx, 64, { align: 'center' })
+
+  // Apprentice name
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(34)
+  doc.setTextColor(20, 20, 20)
+  doc.text(apprentice.name, cx, 82, { align: 'center' })
+
+  // Underline name
+  doc.setDrawColor(180, 140, 60)
+  doc.setLineWidth(0.5)
+  const nameWidth = doc.getTextWidth(apprentice.name)
+  doc.line(cx - nameWidth / 2, 85, cx + nameWidth / 2, 85)
+
+  // Program description
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(12)
+  doc.setTextColor(60, 60, 60)
+  const stageCap = apprentice.stage.charAt(0).toUpperCase() + apprentice.stage.slice(1)
+  doc.text(
+    `has successfully completed the ${stageCap} Apprenticeship Program`,
+    cx, 97, { align: 'center' }
+  )
+
+  // Duration line
+  const gradDate = apprentice.expectedGraduationDate ?? new Date().toISOString().split('T')[0]
+  const months = Math.round(
+    (new Date(gradDate).getTime() - new Date(apprentice.startDate).getTime()) / (30.44 * 86400000)
+  )
+  const durationLabel = months >= 12
+    ? `${Math.floor(months / 12)} year${Math.floor(months / 12) !== 1 ? 's' : ''}${months % 12 ? ` ${months % 12} months` : ''}`
+    : `${months} month${months !== 1 ? 's' : ''}`
+
+  doc.setFontSize(10)
+  doc.setTextColor(100, 100, 100)
+  doc.text(`${apprentice.startDate}  →  ${gradDate}  (${durationLabel})`, cx, 107, { align: 'center' })
+
+  // Skills
+  const skills = apprentice.specialtiesLearning.split(',').map(s => s.trim()).filter(Boolean)
+  if (skills.length > 0) {
+    doc.setFontSize(10)
+    doc.setTextColor(80, 80, 80)
+    doc.text('Skills Mastered:', cx, 120, { align: 'center' })
+    doc.setFont('helvetica', 'italic')
+    doc.setFontSize(11)
+    doc.setTextColor(40, 40, 40)
+    doc.text(skills.join('  ·  '), cx, 129, { align: 'center' })
+    doc.setFont('helvetica', 'normal')
+  }
+
+  // Gold divider
+  doc.setDrawColor(180, 140, 60)
+  doc.setLineWidth(0.4)
+  doc.line(50, 140, pageW - 50, 140)
+
+  // Signature lines
+  const sigY   = pageH - 36
+  const leftX  = pageW * 0.27
+  const rightX = pageW * 0.73
+  const sigLen = 45
+
+  doc.setDrawColor(80, 80, 80)
+  doc.setLineWidth(0.3)
+  doc.line(leftX - sigLen / 2, sigY, leftX + sigLen / 2, sigY)
+  doc.line(rightX - sigLen / 2, sigY, rightX + sigLen / 2, sigY)
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(10)
+  doc.setTextColor(30, 30, 30)
+  doc.text(apprentice.mentorName ?? 'Mentor', leftX, sigY + 5, { align: 'center' })
+  doc.text('Studio Director', rightX, sigY + 5, { align: 'center' })
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(120, 120, 120)
+  doc.text('Mentor / Trainer', leftX, sigY + 10, { align: 'center' })
+  doc.text('Luxe Beauty Studio', rightX, sigY + 10, { align: 'center' })
+
+  // Issue date
+  doc.setFontSize(8)
+  doc.setTextColor(150, 150, 150)
+  doc.text(`Issued: ${new Date().toLocaleDateString('en-GH', { day: 'numeric', month: 'long', year: 'numeric' })}`, cx, pageH - 18, { align: 'center' })
+
+  doc.save(`certificate-${apprentice.name.replace(/\s+/g, '-')}.pdf`)
 }

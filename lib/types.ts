@@ -126,6 +126,37 @@ export type ProgressNote = {
   addedBy: string
 }
 
+export type SkillSignOff = {
+  skill: string
+  status: 'not_started' | 'in_progress' | 'signed_off'
+  signedOffBy: string | null
+  signedOffAt: string | null
+}
+
+export type ApprenticeTask = {
+  id: string
+  apprenticeId: string
+  title: string
+  description: string | null
+  dueDate: string | null
+  priority: 'low' | 'medium' | 'high'
+  status: 'pending' | 'in_progress' | 'completed'
+  assignedBy: string
+  completedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type AttendanceRecord = {
+  id: string
+  apprenticeId: string
+  date: string
+  status: 'present' | 'absent' | 'late'
+  notes: string | null
+  recordedBy: string
+  createdAt: string
+}
+
 export type Apprentice = {
   id: string
   name: string
@@ -137,7 +168,9 @@ export type Apprentice = {
   status: 'active' | 'graduated' | 'dropped'
   startDate: string
   expectedGraduationDate: string | null
+  programDurationMonths: number | null
   specialtiesLearning: string
+  skillSignOffs: SkillSignOff[]
   stipend: number | null
   notes: string | null
   progressNotes: ProgressNote[]
