@@ -6,7 +6,7 @@ import { useState } from 'react'
 import {
   LayoutDashboard, Calendar, Users, Scissors, UserCheck,
   CreditCard, BarChart2, Zap, Settings, Menu, X, LogOut,
-  FileText, DollarSign, Receipt, MapPin, Sun, Moon, Gift, Package
+  FileText, DollarSign, Receipt, MapPin, Sun, Moon, Gift, Package, GraduationCap
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
@@ -21,6 +21,7 @@ const nav: NavItem[] = [
   { href: '/pos',          label: 'Point of Sale', icon: CreditCard,      roles: ['owner', 'manager', 'staff'] },
   { href: '/services',     label: 'Services',      icon: Scissors,        roles: ['owner', 'manager'] },
   { href: '/staff',        label: 'Staff',         icon: UserCheck,       roles: ['owner', 'manager'] },
+  { href: '/apprentices', label: 'Apprentices',   icon: GraduationCap,   roles: ['owner', 'manager', 'staff'] },
   { href: '/automations',  label: 'Automations',   icon: Zap,             roles: ['owner', 'manager'] },
   { href: '/analytics',    label: 'Analytics',     icon: BarChart2,       roles: ['owner', 'manager'] },
   { href: '/invoices',     label: 'Invoices',      icon: FileText,        roles: ['owner', 'manager'] },

@@ -61,6 +61,19 @@ export const LocationSchema = z.object({
   phone:   phone,
 })
 
+export const ApprenticeSchema = z.object({
+  name:                   z.string().min(1).max(100).trim(),
+  phone:                  phone.optional().or(z.literal('')),
+  email:                  z.string().email().optional().or(z.literal('')),
+  mentorId:               z.string().max(128).nullable().optional(),
+  stage:                  z.enum(['beginner', 'intermediate', 'advanced']),
+  startDate:              isoDate,
+  expectedGraduationDate: isoDate.nullable().optional().or(z.literal('')),
+  specialtiesLearning:    z.string().max(300).optional(),
+  stipend:                z.number().min(0).max(1_000_000).nullable().optional(),
+  notes:                  z.string().max(1000).optional(),
+})
+
 export const POSSaleSchema = z.object({
   clientId:      z.string().min(1).max(128),
   staffId:       z.string().min(1).max(128),

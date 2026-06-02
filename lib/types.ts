@@ -118,6 +118,34 @@ export type AutomationWithStats = Automation & {
   lastTriggered: Date | null
 }
 
+export type ProgressNote = {
+  id: string
+  date: string
+  note: string
+  rating: number
+  addedBy: string
+}
+
+export type Apprentice = {
+  id: string
+  name: string
+  phone: string | null
+  email: string | null
+  mentorId: string | null
+  mentorName: string | null
+  stage: 'beginner' | 'intermediate' | 'advanced'
+  status: 'active' | 'graduated' | 'dropped'
+  startDate: string
+  expectedGraduationDate: string | null
+  specialtiesLearning: string
+  stipend: number | null
+  notes: string | null
+  progressNotes: ProgressNote[]
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 export type Invoice = {
   id: string
   clientId: string
