@@ -33,20 +33,24 @@ export async function downloadServiceReceipt(apt: {
 
   const salonName    = apt.salonName    || 'Luxe Beauty Studio'
   const salonTagline = apt.salonTagline || 'Where Beauty Meets Excellence'
+  // Branch name takes priority as the headline; salon name becomes the subtitle
+  const headline  = apt.locationName || salonName
+  const subheader = apt.locationName ? salonName : salonTagline
+  const showTagline = !!apt.locationName
 
   // ── Header ──────────────────────────────────────────────────────────────
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(18)
   doc.setTextColor(20, 20, 20)
-  doc.text(salonName, pageW / 2, y, { align: 'center' })
+  doc.text(headline, pageW / 2, y, { align: 'center' })
   y += 6
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
   doc.setTextColor(120, 120, 120)
-  doc.text(salonTagline, pageW / 2, y, { align: 'center' })
-  if (apt.locationName) {
+  doc.text(subheader, pageW / 2, y, { align: 'center' })
+  if (showTagline) {
     y += 4
-    doc.text(apt.locationName, pageW / 2, y, { align: 'center' })
+    doc.text(salonTagline, pageW / 2, y, { align: 'center' })
   }
 
   // Gold rule
