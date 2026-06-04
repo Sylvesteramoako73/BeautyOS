@@ -147,6 +147,75 @@ export async function updateAppointmentStatus(id: string, status: string): Promi
   return mapAppt(doc)
 }
 
+export async function recordAppointmentPayment(
+  id: string,
+  data: { paymentMethod: 'cash' | 'card' | 'momo' | 'bank_transfer'; discountPct?: number }
+): Promise<Appointment> {
+  const now    = new Date()
+  const nowStr = now.toISOString()
+
+  const doc     = await col().doc(id).get()
+  const apt     = doc.data()!
+  const services: { serviceId: string; name: string; price: number; duration: number }[] = apt.services ?? []
+
+  const subtotal    = services.reduce((s, sv) => s + sv.price, 0)
+  const pct         = Math.max(0, Math.min(100, data.discountPct ?? 0))
+  const discountAmt = Math.round(subtotal * pct / 100)
+  const total       = Math.max(0, subtotal - discountAmt)
+
+  const invoiceNumber = `INV-${Date.now()}`
+  const invoiceRef    = adminDb.collection('invoices').doc()
+
+  await Promise.all([
+    col().doc(id).update({
+      status:        'completed',
+      paymentStatus: 'paid',
+      paymentMethod: data.paymentMethod,
+      paidAt:        nowStr,
+      discountPct:   pct,
+      discountAmt,
+      totalPrice:    total,
+      updatedAt:     nowStr,
+    }),
+    invoiceRef.set({
+      clientId:      apt.clientId,
+      appointmentId: id,
+      invoiceNumber,
+      subtotal,
+      discountPct:   pct,
+      discountAmt,
+      total,
+      status:        'paid',
+      paymentMethod: data.paymentMethod,
+      paidAt:        nowStr,
+      createdAt:     nowStr,
+      items: services.map(s => ({
+        serviceId: s.serviceId, description: s.name,
+        quantity: 1, unitPrice: s.price, total: s.price,
+      })),
+    }),
+  ])
+
+  // Update client stats
+  const clientSnap = await adminDb.collection('clients').doc(apt.clientId).get()
+  const clientData = clientSnap.data()!
+  await adminDb.collection('clients').doc(apt.clientId).update({
+    totalVisits: (clientData.totalVisits ?? 0) + 1,
+    totalSpent:  (clientData.totalSpent  ?? 0) + total,
+    lastVisitAt: nowStr,
+    updatedAt:   nowStr,
+  })
+
+  // Trigger automations
+  const trigger = (clientData.totalVisits ?? 0) === 0 ? 'new_client' : 'after_appointment'
+  const { runAutomationForEvent } = await import('@/lib/services/automation-engine')
+  await runAutomationForEvent(trigger, { appointmentId: id })
+
+  revalidatePath('/appointments')
+  revalidatePath('/')
+  return mapAppt(await col().doc(id).get())
+}
+
 export async function deleteAppointment(id: string) {
   await col().doc(id).update({ status: 'cancelled', updatedAt: new Date().toISOString() })
   revalidatePath('/appointments')

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useTransition } from 'react'
 import { Plus, ChevronLeft, ChevronRight, Search, Loader2, X, Check, Download, FileDown } from 'lucide-react'
-import { updateAppointmentStatus, createAppointment } from '@/lib/actions/appointments'
+import { updateAppointmentStatus, createAppointment, recordAppointmentPayment } from '@/lib/actions/appointments'
 import { formatCurrency, cn } from '@/lib/utils'
 import type { Client, Staff, Service } from '@/lib/types'
 import type { Location } from '@/lib/actions/locations'
@@ -88,6 +88,10 @@ export function AppointmentsView({
   const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch]       = useState('')
   const [updating, setUpdating]   = useState<string | null>(null)
+  const [paymentModal, setPaymentModal] = useState<Apt | null>(null)
+  const [payMethod, setPayMethod] = useState<'cash' | 'card' | 'momo' | 'bank_transfer'>('cash')
+  const [discountPct, setDiscountPct] = useState(0)
+  const [recordingPayment, setRecordingPayment] = useState(false)
   const [showNew, setShowNew]     = useState(false)
   const [form, setForm]           = useState(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
@@ -125,6 +129,45 @@ export function AppointmentsView({
       await updateAppointmentStatus(id, status)
       setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a))
       setUpdating(null)
+    })
+  }
+
+  function openPaymentModal(apt: Apt) {
+    setPaymentModal(apt)
+    setPayMethod('cash')
+    setDiscountPct(0)
+  }
+
+  async function handleRecordPayment() {
+    if (!paymentModal) return
+    setRecordingPayment(true)
+    startTransition(async () => {
+      const updated = await recordAppointmentPayment(paymentModal.id, {
+        paymentMethod: payMethod,
+        discountPct,
+      })
+      setAppointments(prev => prev.map(a => a.id === paymentModal.id ? { ...a, ...updated } : a))
+      const { downloadServiceReceipt } = await import('@/lib/pdf')
+      await downloadServiceReceipt({
+        id:            updated.id,
+        clientName:    updated.clientName,
+        clientPhone:   updated.clientPhone,
+        staffName:     updated.staffName,
+        date:          updated.date,
+        startTime:     updated.startTime,
+        endTime:       updated.endTime,
+        totalPrice:    updated.totalPrice,
+        paymentStatus: updated.paymentStatus,
+        locationName:  updated.locationName ?? null,
+        notes:         updated.notes ?? null,
+        services:      (updated.services ?? []).map((s: any) => ({
+          name: s.name ?? s.service?.name ?? '', price: s.price ?? 0, duration: s.duration ?? 0,
+        })),
+        salonName:    salonSettings?.salonName,
+        salonTagline: salonSettings?.tagline,
+      })
+      setPaymentModal(null)
+      setRecordingPayment(false)
     })
   }
 
@@ -295,7 +338,7 @@ export function AppointmentsView({
                         </div>
                       )}
                     {apt.status === 'in-progress' && !updating && (
-                      <button onClick={() => handleStatusChange(apt.id, 'completed')} className="btn-ghost text-xs h-7 px-2 text-green-600">Complete</button>
+                      <button onClick={() => openPaymentModal(apt)} className="btn-ghost text-xs h-7 px-2 text-green-600">Complete</button>
                     )}
                     {apt.status === 'completed' && !updating && (
                       <button onClick={() => handleDownloadReceipt(apt)} className="btn-ghost h-7 w-7 p-0 justify-center" title="Download receipt">
@@ -556,6 +599,119 @@ export function AppointmentsView({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Payment Modal ─────────────────────────────────────────────────── */}
+      {paymentModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <div>
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100">Record Payment</h2>
+                <p className="text-xs text-gray-500 mt-0.5">{paymentModal.client?.name ?? paymentModal.clientName}</p>
+              </div>
+              <button onClick={() => setPaymentModal(null)} className="btn-ghost h-7 w-7 p-0 justify-center">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Services breakdown */}
+              <div className="space-y-1.5">
+                {(paymentModal.services ?? []).map((s: any, i: number) => (
+                  <div key={i} className="flex justify-between text-sm">
+                    <span className="text-gray-700 dark:text-gray-300">{s.name ?? s.service?.name}</span>
+                    <span className="text-gray-900 dark:text-gray-100 font-medium">{formatCurrency(s.price ?? 0)}</span>
+                  </div>
+                ))}
+                <div className="border-t border-gray-100 dark:border-gray-800 pt-1.5 flex justify-between text-sm font-medium">
+                  <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+                  <span>{formatCurrency((paymentModal.services ?? []).reduce((s: number, sv: any) => s + (sv.price ?? 0), 0))}</span>
+                </div>
+              </div>
+
+              {/* Discount */}
+              <div>
+                <label className="form-label">Discount (%)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={discountPct}
+                  onChange={e => setDiscountPct(Math.max(0, Math.min(100, Number(e.target.value))))}
+                  className="form-input w-full"
+                />
+              </div>
+
+              {/* Total */}
+              {(() => {
+                const sub = (paymentModal.services ?? []).reduce((s: number, sv: any) => s + (sv.price ?? 0), 0)
+                const disc = Math.round(sub * discountPct / 100)
+                const total = sub - disc
+                return (
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-md px-4 py-3 flex items-center justify-between">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {disc > 0 && <p className="text-green-600 dark:text-green-400">−{formatCurrency(disc)} discount</p>}
+                      <p className="font-semibold text-base text-gray-900 dark:text-gray-100">Total: {formatCurrency(total)}</p>
+                    </div>
+                    <span className={`badge ${paymentModal.paymentStatus === 'paid' ? 'badge-green' : 'badge-yellow'}`}>
+                      {paymentModal.paymentStatus}
+                    </span>
+                  </div>
+                )
+              })()}
+
+              {/* Payment method */}
+              <div>
+                <label className="form-label">Payment Method</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { value: 'cash',          label: 'Cash' },
+                    { value: 'card',          label: 'Card' },
+                    { value: 'momo',          label: 'Mobile Money' },
+                    { value: 'bank_transfer', label: 'Bank Transfer' },
+                  ] as const).map(m => (
+                    <button
+                      key={m.value}
+                      type="button"
+                      onClick={() => setPayMethod(m.value)}
+                      className={cn(
+                        'h-9 px-3 text-sm rounded-md border transition-colors cursor-pointer',
+                        payMethod === m.value
+                          ? 'bg-gray-900 text-white border-gray-900 dark:bg-gray-100 dark:text-gray-900 dark:border-gray-100'
+                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'
+                      )}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col gap-2 pt-1">
+                <button
+                  onClick={handleRecordPayment}
+                  disabled={recordingPayment}
+                  className="btn-primary w-full justify-center"
+                >
+                  {recordingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  Record Payment &amp; Download Receipt
+                </button>
+                <button
+                  onClick={() => {
+                    setPaymentModal(null)
+                    handleStatusChange(paymentModal.id, 'completed')
+                  }}
+                  disabled={recordingPayment}
+                  className="btn-secondary w-full justify-center text-gray-500"
+                >
+                  Complete Without Payment
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
