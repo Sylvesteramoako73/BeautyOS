@@ -149,7 +149,7 @@ export async function updateAppointmentStatus(id: string, status: string): Promi
 
 export async function recordAppointmentPayment(
   id: string,
-  data: { paymentMethod: 'cash' | 'card' | 'momo' | 'bank_transfer'; discountPct?: number }
+  data: { paymentMethod: 'cash' | 'card' | 'momo' | 'bank_transfer'; discountPct?: number; paystackRef?: string }
 ): Promise<Appointment> {
   const now    = new Date()
   const nowStr = now.toISOString()
@@ -176,6 +176,7 @@ export async function recordAppointmentPayment(
       discountAmt,
       totalPrice:    total,
       updatedAt:     nowStr,
+      ...(data.paystackRef ? { paystackRef: data.paystackRef } : {}),
     }),
     invoiceRef.set({
       clientId:      apt.clientId,

@@ -138,6 +138,64 @@ export function AppointmentsView({
     setDiscountPct(0)
   }
 
+  async function handlePayWithPaystack() {
+    if (!paymentModal) return
+    const sub   = (paymentModal.services ?? []).reduce((s: number, sv: any) => s + (sv.price ?? 0), 0)
+    const disc  = Math.round(sub * discountPct / 100)
+    const total = sub - disc
+    const clientEmail = clients.find(c => c.id === paymentModal.clientId)?.email || 'pay@luxebeauty.com'
+
+    await new Promise<void>((resolve, reject) => {
+      if ((window as any).PaystackPop) { resolve(); return }
+      const script = document.createElement('script')
+      script.src = 'https://js.paystack.co/v1/inline.js'
+      script.onload = () => resolve()
+      script.onerror = () => reject(new Error('Paystack failed to load'))
+      document.head.appendChild(script)
+    })
+
+    const handler = (window as any).PaystackPop.setup({
+      key:      process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+      email:    clientEmail,
+      amount:   Math.round(total * 100),
+      currency: 'GHS',
+      ref:      `APT-${paymentModal.id}-${Date.now()}`,
+      channels: ['card', 'mobile_money', 'bank'],
+      metadata: {
+        custom_fields: [
+          { display_name: 'Client',    variable_name: 'client',    value: paymentModal.client?.name ?? paymentModal.clientName },
+          { display_name: 'Staff',     variable_name: 'staff',     value: paymentModal.staff?.name ?? paymentModal.staffName },
+          { display_name: 'Appt ID',   variable_name: 'appt_id',   value: paymentModal.id },
+        ],
+      },
+      onSuccess: (transaction: { reference: string }) => {
+        setRecordingPayment(true)
+        const apt = paymentModal
+        startTransition(async () => {
+          const updated = await recordAppointmentPayment(apt.id, {
+            paymentMethod: 'card',
+            discountPct,
+            paystackRef: transaction.reference,
+          })
+          setAppointments(prev => prev.map(a => a.id === apt.id ? { ...a, ...updated } : a))
+          const { downloadServiceReceipt } = await import('@/lib/pdf')
+          await downloadServiceReceipt({
+            id: updated.id, clientName: updated.clientName, clientPhone: updated.clientPhone,
+            staffName: updated.staffName, date: updated.date, startTime: updated.startTime,
+            endTime: updated.endTime, totalPrice: updated.totalPrice, paymentStatus: updated.paymentStatus,
+            locationName: updated.locationName ?? null, notes: updated.notes ?? null,
+            services: (updated.services ?? []).map((s: any) => ({ name: s.name ?? s.service?.name ?? '', price: s.price ?? 0, duration: s.duration ?? 0 })),
+            salonName: salonSettings?.salonName, salonTagline: salonSettings?.tagline,
+          })
+          setPaymentModal(null)
+          setRecordingPayment(false)
+        })
+      },
+      onCancel: () => {},
+    })
+    handler.openIframe()
+  }
+
   async function handleRecordPayment() {
     if (!paymentModal) return
     setRecordingPayment(true)
@@ -662,6 +720,23 @@ export function AppointmentsView({
                   </div>
                 )
               })()}
+
+              {/* Paystack online payment */}
+              <button
+                type="button"
+                onClick={handlePayWithPaystack}
+                disabled={recordingPayment}
+                className="w-full h-11 rounded-md font-semibold text-sm text-white transition-colors cursor-pointer disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg, #0ba4db 0%, #00c3f7 100%)' }}
+              >
+                Pay via Paystack (Card / Mobile Money / Bank)
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                <span className="text-xs text-gray-400">or record manually</span>
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+              </div>
 
               {/* Payment method */}
               <div>
