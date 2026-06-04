@@ -134,7 +134,7 @@ export function StaffView({ staff: initial, locations }: { staff: StaffWithStats
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Team Members',      value: String(staff.length) },
           { label: 'Available Now',     value: String(staff.filter(s => s.isAvailable).length) },
@@ -153,7 +153,7 @@ export function StaffView({ staff: initial, locations }: { staff: StaffWithStats
         <input type="text" placeholder="Search staff..." value={search} onChange={e => setSearch(e.target.value)} className="form-input pl-9" />
       </div>
 
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden overflow-x-auto">
         <table className="data-table">
           <thead>
             <tr>

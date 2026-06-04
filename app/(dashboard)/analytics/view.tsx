@@ -100,9 +100,9 @@ export function AnalyticsView({ initialData }: { initialData: AnalyticsData }) {
         <KPI label="Completion Rate"  value={`${data.kpis.completionRate}%`}           change={0}                           changeLabel="vs last month" />
       </div>
 
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Revenue trend */}
-        <div className="col-span-2 card p-5">
+        <div className="lg:col-span-2 card p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-semibold text-gray-900 text-sm">Revenue Trend</h3>

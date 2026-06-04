@@ -356,7 +356,7 @@ export function AppointmentsView({
       </div>
 
       {view === 'list' ? (
-        <div className="card overflow-hidden">
+        <div className="card overflow-hidden overflow-x-auto">
           <table className="data-table">
             <thead>
               <tr>

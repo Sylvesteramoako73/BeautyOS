@@ -113,7 +113,7 @@ export function ExpensesView({ expenses: initial, currentMonth, locations }: { e
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="stat-box">
           <p className="text-xs text-gray-500 mb-2">Total This Month</p>
           <p className="text-2xl font-semibold text-gray-900">{formatCurrency(total)}</p>
@@ -212,7 +212,7 @@ export function ExpensesView({ expenses: initial, currentMonth, locations }: { e
       )}
 
       {/* Expenses list */}
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden overflow-x-auto">
         <table className="data-table">
           <thead>
             <tr>

@@ -53,7 +53,7 @@ export function LocationsView({ locations: initial }: { locations: LocationStats
       </div>
 
       {/* Network summary */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="stat-box">
           <p className="text-xs text-gray-500 mb-2">Network Revenue (mo)</p>
           <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(totalRevenue)}</p>

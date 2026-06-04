@@ -59,12 +59,12 @@ export function Topbar({ userName }: { userName: string }) {
         <PushNotificationButton />
         {/* Quick actions */}
         <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
-          <Link href="/pos" className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-            <Plus className="h-3.5 w-3.5" /> New Sale
+          <Link href="/pos" className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <Plus className="h-3.5 w-3.5 shrink-0" /> <span className="hidden sm:inline">New Sale</span>
           </Link>
           <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
-          <Link href="/appointments" className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-            <Calendar className="h-3.5 w-3.5" /> Book
+          <Link href="/appointments" className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <Calendar className="h-3.5 w-3.5 shrink-0" /> <span className="hidden sm:inline">Book</span>
           </Link>
         </div>
 

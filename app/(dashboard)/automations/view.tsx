@@ -43,9 +43,70 @@ const CHANNEL_LABELS: Record<string, string> = {
   sms: 'SMS', whatsapp: 'WhatsApp', email: 'Email',
 }
 
+const DEFAULT_TEMPLATES: Record<string, { name: string; description: string; delayMinutes: number; messageTemplate: string }> = {
+  before_appointment: {
+    name: 'Appointment Reminder',
+    description: 'Remind clients before their appointment',
+    delayMinutes: -120,
+    messageTemplate: `Hi {{client_name}}, just a reminder that you have an appointment at {{time}} today for {{service}} with {{staff}}. See you soon! 💅`,
+  },
+  after_appointment: {
+    name: 'Post-Visit Thank You',
+    description: 'Thank clients after their visit',
+    delayMinutes: 60,
+    messageTemplate: `Hi {{client_name}}, thank you for visiting us today! We hope you loved your {{service}}. We'd love to see you again soon. 😊`,
+  },
+  birthday: {
+    name: 'Birthday Message',
+    description: 'Wish clients a happy birthday',
+    delayMinutes: 0,
+    messageTemplate: `Happy birthday, {{client_name}}! 🎂🎉 Wishing you a wonderful day. As a birthday treat, enjoy a special discount on your next visit with us!`,
+  },
+  no_visit: {
+    name: 'Win-Back Message',
+    description: 'Re-engage clients who haven\'t visited in a while',
+    delayMinutes: 0,
+    messageTemplate: `Hi {{client_name}}, we miss you! It's been a while since your last visit. Come back and treat yourself — we'd love to have you in again. Book anytime! 💖`,
+  },
+  no_show: {
+    name: 'No-Show Follow-Up',
+    description: 'Follow up with clients who missed their appointment',
+    delayMinutes: 60,
+    messageTemplate: `Hi {{client_name}}, we noticed you missed your appointment today. No worries — feel free to rebook at a time that works better for you!`,
+  },
+  payment: {
+    name: 'Payment Confirmation',
+    description: 'Confirm payment received',
+    delayMinutes: 0,
+    messageTemplate: `Hi {{client_name}}, we've received your payment of {{amount}}. Thank you! We look forward to your next visit. 🙏`,
+  },
+  loyalty_upgrade: {
+    name: 'Loyalty Tier Upgrade',
+    description: 'Congratulate clients on reaching a new loyalty tier',
+    delayMinutes: 0,
+    messageTemplate: `Congratulations, {{client_name}}! 🎉 You've been upgraded to {{new_tier}} status. Thank you for your loyalty — enjoy your exclusive benefits!`,
+  },
+  new_client: {
+    name: 'New Client Welcome',
+    description: 'Welcome first-time clients after their visit',
+    delayMinutes: 60,
+    messageTemplate: `Welcome, {{client_name}}! 🌟 It was so lovely having you for the first time today. We hope you enjoyed your {{service}}. We can't wait to see you again!`,
+  },
+  review_request: {
+    name: 'Review Request',
+    description: 'Ask clients to leave a review after their visit',
+    delayMinutes: 1440,
+    messageTemplate: `Hi {{client_name}}, thank you for visiting us yesterday! If you enjoyed your experience, we'd really appreciate a quick review. Your feedback means the world to us. 🙏`,
+  },
+}
+
 const DEFAULT_FORM = {
-  name: '', description: '', trigger: 'before_appointment',
-  channel: 'whatsapp', delayMinutes: -1440, messageTemplate: '',
+  name: 'Appointment Reminder',
+  description: 'Remind clients before their appointment',
+  trigger: 'before_appointment',
+  channel: 'whatsapp',
+  delayMinutes: -120,
+  messageTemplate: DEFAULT_TEMPLATES.before_appointment.messageTemplate,
   conditionJson: '{}',
 }
 
@@ -111,8 +172,8 @@ export function AutomationsView({ automations: initial }: { automations: Automat
       const result = await runAutomationManually(id)
       const r = result.find((x: any) => x.automationId === id)
       setRunResult(r ? `Sent: ${r.sent} · Skipped: ${r.skipped} · Failed: ${r.failed}` : 'No matching triggers found right now.')
-    } catch {
-      setRunResult('Error running automation.')
+    } catch (err: any) {
+      setRunResult(`Error: ${err?.message ?? 'Unknown error'}`)
     }
     setRunningId(null)
   }
@@ -362,7 +423,24 @@ export function AutomationsView({ automations: initial }: { automations: Automat
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="form-label">Trigger *</label>
-                  <select value={form.trigger} onChange={e => setForm(f => ({...f, trigger: e.target.value}))} className="form-input w-full">
+                  <select
+                    value={form.trigger}
+                    onChange={e => {
+                      const t = e.target.value
+                      const defaults = DEFAULT_TEMPLATES[t]
+                      setForm(f => ({
+                        ...f,
+                        trigger: t,
+                        ...(defaults ? {
+                          name: defaults.name,
+                          description: defaults.description,
+                          delayMinutes: defaults.delayMinutes,
+                          messageTemplate: defaults.messageTemplate,
+                        } : {}),
+                      }))
+                    }}
+                    className="form-input w-full"
+                  >
                     {Object.entries(TRIGGER_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                   </select>
                 </div>

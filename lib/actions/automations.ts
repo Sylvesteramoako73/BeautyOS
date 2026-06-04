@@ -73,7 +73,12 @@ export async function deleteAutomation(id: string) {
 
 export async function runAutomationManually(id?: string) {
   const { processAllAutomations } = await import('@/lib/services/automation-engine')
-  const all = await processAllAutomations()
-  revalidatePath('/automations')
-  return id ? all.filter(r => r.automationId === id) : all
+  try {
+    const all = await processAllAutomations()
+    revalidatePath('/automations')
+    return id ? all.filter(r => r.automationId === id) : all
+  } catch (err: any) {
+    console.error('[runAutomationManually] error:', err?.message ?? err)
+    throw new Error(err?.message ?? 'Automation engine failed')
+  }
 }

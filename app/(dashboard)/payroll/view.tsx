@@ -86,7 +86,7 @@ export function PayrollView() {
 
       {loaded && (
         <>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { label: 'Staff Members',       value: String(filtered.length) },
               { label: 'Total Revenue',        value: formatCurrency(totalRevenue) },
@@ -105,7 +105,7 @@ export function PayrollView() {
               onChange={e => setSearch(e.target.value)} className="form-input pl-9" />
           </div>
 
-          <div className="card overflow-hidden">
+          <div className="card overflow-hidden overflow-x-auto">
             <table className="data-table">
               <thead>
                 <tr>

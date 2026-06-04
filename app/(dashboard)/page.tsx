@@ -61,39 +61,41 @@ export default async function DashboardPage() {
           {todayApts.length === 0 ? (
             <p className="text-sm text-gray-500 px-5 py-8 text-center">No appointments today.</p>
           ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Client</th>
-                  <th>Service</th>
-                  <th>Staff</th>
-                  <th>Status</th>
-                  <th className="text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {todayApts.map(apt => (
-                  <tr key={apt.id}>
-                    <td className="font-mono text-xs text-gray-500">{apt.startTime}</td>
-                    <td className="font-medium">{apt.clientName}</td>
-                    <td className="text-gray-600">{apt.services.map((s: any) => s.name).join(', ') || '—'}</td>
-                    <td className="text-gray-500">{apt.staffName.split(' ')[0]}</td>
-                    <td>
-                      <span className={`badge ${
-                        apt.status === 'completed'   ? 'badge-gray'   :
-                        apt.status === 'in-progress' ? 'badge-green'  :
-                        apt.status === 'confirmed'   ? 'badge-blue'   :
-                        apt.status === 'cancelled'   ? 'badge-red'    : 'badge-yellow'
-                      }`}>
-                        {apt.status === 'in-progress' ? 'In Progress' : apt.status.charAt(0).toUpperCase() + apt.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="text-right font-medium">{formatCurrency(apt.totalPrice)}</td>
+            <div className="overflow-x-auto">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Client</th>
+                    <th>Service</th>
+                    <th>Staff</th>
+                    <th>Status</th>
+                    <th className="text-right">Amount</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {todayApts.map(apt => (
+                    <tr key={apt.id}>
+                      <td className="font-mono text-xs text-gray-500">{apt.startTime}</td>
+                      <td className="font-medium">{apt.clientName}</td>
+                      <td className="text-gray-600">{apt.services.map((s: any) => s.name).join(', ') || '—'}</td>
+                      <td className="text-gray-500">{apt.staffName.split(' ')[0]}</td>
+                      <td>
+                        <span className={`badge ${
+                          apt.status === 'completed'   ? 'badge-gray'   :
+                          apt.status === 'in-progress' ? 'badge-green'  :
+                          apt.status === 'confirmed'   ? 'badge-blue'   :
+                          apt.status === 'cancelled'   ? 'badge-red'    : 'badge-yellow'
+                        }`}>
+                          {apt.status === 'in-progress' ? 'In Progress' : apt.status.charAt(0).toUpperCase() + apt.status.slice(1)}
+                        </span>
+                      </td>
+                      <td className="text-right font-medium">{formatCurrency(apt.totalPrice)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 

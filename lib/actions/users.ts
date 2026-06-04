@@ -25,9 +25,8 @@ export async function getUsers(): Promise<AppUser[]> {
 }
 
 export async function createUserDoc(uid: string, name: string, email: string): Promise<Role> {
-  // First user ever → owner; everyone else → staff
-  const existing = await col().where('role', '==', 'owner').limit(1).get()
-  const role: Role = existing.empty ? 'owner' : 'staff'
+  // Every new signup is an owner of their own salon account
+  const role: Role = 'owner'
 
   await col().doc(uid).set({
     name,

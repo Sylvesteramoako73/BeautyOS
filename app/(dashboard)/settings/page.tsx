@@ -13,7 +13,7 @@ import type { AppUser, Role } from '@/lib/actions/users'
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-3 gap-6 py-6 border-b border-gray-200 last:border-0">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-gray-200 last:border-0">
       <div>
         <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
         {description && <p className="text-xs text-gray-500 mt-1 leading-relaxed">{description}</p>}
@@ -388,7 +388,7 @@ export default function SettingsPage() {
             ) : (
               <div className="space-y-2">
                 {/* Role legend */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
                   {(Object.entries(ROLE_CONFIG) as [Role, typeof ROLE_CONFIG[Role]][]).map(([role, cfg]) => (
                     <div key={role} className={`border rounded-md p-2.5 ${cfg.color}`}>
                       <div className="flex items-center gap-1.5 mb-0.5">

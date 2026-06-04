@@ -70,9 +70,11 @@ async function processBeforeAppointment(auto: any): Promise<ProcessResult> {
 
     if (diff > 0 && diff <= windowMs) {
       if (await alreadySent(auto.id, appt.id)) { result.skipped++; continue }
-      const message = renderTemplate(auto.messageTemplate, aptVars(appt))
-      const send    = await sendMessage(auto.channel, appt.clientPhone, message)
-      await logResult({ automationId: auto.id, appointmentId: appt.id, clientId: appt.clientId, recipient: appt.clientPhone, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+      const message   = renderTemplate(auto.messageTemplate, aptVars(appt))
+      const recipient = auto.channel === 'email' ? appt.clientEmail : appt.clientPhone
+      if (!recipient) { result.skipped++; continue }
+      const send = await sendMessage(auto.channel, recipient, message, 'Appointment Reminder')
+      await logResult({ automationId: auto.id, appointmentId: appt.id, clientId: appt.clientId, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
       send.success ? result.sent++ : result.failed++
     } else { result.skipped++ }
   }
@@ -86,7 +88,6 @@ async function processAfterAppointment(auto: any): Promise<ProcessResult> {
   const cutoff   = new Date(now - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   const cond     = JSON.parse(auto.conditionJson || '{}')
 
-  // Single where on date
   const snap = await adminDb.collection('appointments').where('date', '>=', cutoff).get()
 
   for (const doc of snap.docs) {
@@ -96,9 +97,11 @@ async function processAfterAppointment(auto: any): Promise<ProcessResult> {
     const elapsed = now - new Date(appt.updatedAt).getTime()
     if (elapsed >= windowMs && elapsed < windowMs + 30 * 60 * 1000) {
       if (await alreadySent(auto.id, appt.id)) { result.skipped++; continue }
-      const message = renderTemplate(auto.messageTemplate, aptVars(appt))
-      const send    = await sendMessage(auto.channel, appt.clientPhone, message)
-      await logResult({ automationId: auto.id, appointmentId: appt.id, clientId: appt.clientId, recipient: appt.clientPhone, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+      const message   = renderTemplate(auto.messageTemplate, aptVars(appt))
+      const recipient = auto.channel === 'email' ? appt.clientEmail : appt.clientPhone
+      if (!recipient) { result.skipped++; continue }
+      const send = await sendMessage(auto.channel, recipient, message, 'Thank you for your visit')
+      await logResult({ automationId: auto.id, appointmentId: appt.id, clientId: appt.clientId, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
       send.success ? result.sent++ : result.failed++
     } else { result.skipped++ }
   }
@@ -120,9 +123,11 @@ async function processBirthday(auto: any): Promise<ProcessResult> {
     const dob = new Date(client.dateOfBirth)
     if (String(dob.getMonth() + 1).padStart(2, '0') !== mm || String(dob.getDate()).padStart(2, '0') !== dd) { result.skipped++; continue }
     if (await alreadySent(auto.id, null, client.id)) { result.skipped++; continue }
-    const message = renderTemplate(auto.messageTemplate, { client_name: client.name })
-    const send    = await sendMessage(auto.channel, client.phone, message)
-    await logResult({ automationId: auto.id, clientId: client.id, recipient: client.phone, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+    const message   = renderTemplate(auto.messageTemplate, { client_name: client.name })
+    const recipient = auto.channel === 'email' ? client.email : client.phone
+    if (!recipient) { result.skipped++; continue }
+    const send = await sendMessage(auto.channel, recipient, message, 'Happy Birthday!')
+    await logResult({ automationId: auto.id, clientId: client.id, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
     send.success ? result.sent++ : result.failed++
   }
   return result
@@ -134,16 +139,17 @@ async function processNoVisit(auto: any): Promise<ProcessResult> {
   const days   = cond.daysSinceVisit ?? 30
   const cutoff = new Date(Date.now() - days * 86400000).toISOString()
 
-  // Single where on isActive, filter lastVisitAt in memory
   const snap = await adminDb.collection('clients').where('isActive', '==', true).get()
   for (const doc of snap.docs) {
     const client = { id: doc.id, ...doc.data() } as any
     if (!client.lastVisitAt || client.lastVisitAt >= cutoff) continue
     result.processed++
     if (await alreadySent(auto.id, null, client.id)) { result.skipped++; continue }
-    const message = renderTemplate(auto.messageTemplate, { client_name: client.name })
-    const send    = await sendMessage(auto.channel, client.phone, message)
-    await logResult({ automationId: auto.id, clientId: client.id, recipient: client.phone, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+    const message   = renderTemplate(auto.messageTemplate, { client_name: client.name })
+    const recipient = auto.channel === 'email' ? client.email : client.phone
+    if (!recipient) { result.skipped++; continue }
+    const send = await sendMessage(auto.channel, recipient, message, 'We miss you!')
+    await logResult({ automationId: auto.id, clientId: client.id, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
     send.success ? result.sent++ : result.failed++
   }
   return result
@@ -155,7 +161,6 @@ async function processNoShow(auto: any): Promise<ProcessResult> {
   const windowMs = auto.delayMinutes * 60 * 1000
   const cutoff   = new Date(now - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
-  // Single where on date
   const snap = await adminDb.collection('appointments').where('date', '>=', cutoff).get()
   for (const doc of snap.docs) {
     const appt = { id: doc.id, ...doc.data() } as any
@@ -164,9 +169,11 @@ async function processNoShow(auto: any): Promise<ProcessResult> {
     const elapsed = now - new Date(appt.updatedAt).getTime()
     if (elapsed >= windowMs && elapsed < windowMs + 30 * 60 * 1000) {
       if (await alreadySent(auto.id, appt.id)) { result.skipped++; continue }
-      const message = renderTemplate(auto.messageTemplate, { client_name: appt.clientName })
-      const send    = await sendMessage(auto.channel, appt.clientPhone, message)
-      await logResult({ automationId: auto.id, appointmentId: appt.id, clientId: appt.clientId, recipient: appt.clientPhone, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+      const message   = renderTemplate(auto.messageTemplate, { client_name: appt.clientName })
+      const recipient = auto.channel === 'email' ? appt.clientEmail : appt.clientPhone
+      if (!recipient) { result.skipped++; continue }
+      const send = await sendMessage(auto.channel, recipient, message, 'We missed you today')
+      await logResult({ automationId: auto.id, appointmentId: appt.id, clientId: appt.clientId, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
       send.success ? result.sent++ : result.failed++
     } else { result.skipped++ }
   }
@@ -205,8 +212,59 @@ export async function runAutomationForEvent(
   }
 }
 
+async function processNewClient(auto: any): Promise<ProcessResult> {
+  const result  = { automationId: auto.id, name: auto.name, processed: 0, sent: 0, skipped: 0, failed: 0 }
+  const cutoff  = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+
+  const snap = await adminDb.collection('clients').where('isActive', '==', true).get()
+  for (const doc of snap.docs) {
+    const client = { id: doc.id, ...doc.data() } as any
+    if (!client.createdAt || client.createdAt < cutoff) continue
+    result.processed++
+    if (await alreadySent(auto.id, null, client.id)) { result.skipped++; continue }
+    const message = renderTemplate(auto.messageTemplate, {
+      client_name: client.name,
+      service:     '',
+      staff:       '',
+      amount:      '',
+      time:        '',
+      date:        new Date().toLocaleDateString('en-GH', { day: 'numeric', month: 'long', year: 'numeric' }),
+    })
+    const recipient = auto.channel === 'email' ? client.email : client.phone
+    if (!recipient) { result.skipped++; continue }
+    const send = await sendMessage(auto.channel, recipient, message, `Welcome to ${auto.name}`)
+    await logResult({ automationId: auto.id, clientId: client.id, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+    send.success ? result.sent++ : result.failed++
+  }
+  return result
+}
+
+async function processReviewRequest(auto: any): Promise<ProcessResult> {
+  const result   = { automationId: auto.id, name: auto.name, processed: 0, sent: 0, skipped: 0, failed: 0 }
+  const now      = Date.now()
+  const windowMs = auto.delayMinutes * 60 * 1000
+  const cutoff   = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+  const snap = await adminDb.collection('appointments').where('date', '>=', cutoff).get()
+  for (const doc of snap.docs) {
+    const appt = { id: doc.id, ...doc.data() } as any
+    if (appt.status !== 'completed') continue
+    result.processed++
+    const elapsed = now - new Date(appt.updatedAt).getTime()
+    if (elapsed >= windowMs && elapsed < windowMs + 30 * 60 * 1000) {
+      if (await alreadySent(auto.id, appt.id)) { result.skipped++; continue }
+      const message  = renderTemplate(auto.messageTemplate, aptVars(appt))
+      const recipient = auto.channel === 'email' ? appt.clientEmail : appt.clientPhone
+      if (!recipient) { result.skipped++; continue }
+      const send = await sendMessage(auto.channel, recipient, message, 'How was your visit?')
+      await logResult({ automationId: auto.id, appointmentId: appt.id, clientId: appt.clientId, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+      send.success ? result.sent++ : result.failed++
+    } else { result.skipped++ }
+  }
+  return result
+}
+
 export async function processAllAutomations(): Promise<ProcessResult[]> {
-  // Single where on isActive, filter trigger in switch
   const snap    = await adminDb.collection('automations').where('isActive', '==', true).get()
   const results: ProcessResult[] = []
 
@@ -220,6 +278,8 @@ export async function processAllAutomations(): Promise<ProcessResult[]> {
       case 'birthday':           result = await processBirthday(auto);          break
       case 'no_visit':           result = await processNoVisit(auto);           break
       case 'no_show':            result = await processNoShow(auto);            break
+      case 'new_client':         result = await processNewClient(auto);         break
+      case 'review_request':     result = await processReviewRequest(auto);     break
       default: continue
     }
 

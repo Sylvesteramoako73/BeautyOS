@@ -35,25 +35,45 @@ async function sendSMS(to: string, body: string): Promise<SendResult> {
   }
 }
 
-// ── WhatsApp via Twilio ───────────────────────────────────────────────────────
+// ── WhatsApp via Meta Cloud API ───────────────────────────────────────────────
 
 async function sendWhatsApp(to: string, body: string): Promise<SendResult> {
-  const sid   = process.env.TWILIO_ACCOUNT_SID
-  const token = process.env.TWILIO_AUTH_TOKEN
-  const from  = process.env.TWILIO_FROM_WHATSAPP ?? 'whatsapp:+14155238886'
+  const phoneNumberId = process.env.META_WHATSAPP_PHONE_NUMBER_ID
+  const accessToken   = process.env.META_WHATSAPP_ACCESS_TOKEN
 
-  if (!sid || !token) {
-    console.log(`[WHATSAPP MOCK → ${to}]\n${body}\n`)
-    return { success: true, mock: true }
-  }
-
-  try {
+  // Fallback to Twilio if Meta not configured
+  if (!phoneNumberId || !accessToken) {
+    const sid   = process.env.TWILIO_ACCOUNT_SID
+    const token = process.env.TWILIO_AUTH_TOKEN
+    const from  = process.env.TWILIO_FROM_WHATSAPP ?? 'whatsapp:+14155238886'
+    if (!sid || !token) {
+      console.log(`[WHATSAPP MOCK → ${to}]\n${body}\n`)
+      return { success: true, mock: true }
+    }
     const twilio = (await import('twilio')).default
     const client = twilio(sid, token)
-    // Normalise to WhatsApp format
     const toWa   = to.startsWith('whatsapp:') ? to : `whatsapp:${to}`
     const msg    = await client.messages.create({ to: toWa, from, body })
     return { success: true, messageId: msg.sid }
+  }
+
+  // Strip leading + and spaces — Meta requires plain E.164 digits
+  const toNumber = to.replace(/^\+/, '').replace(/\D/g, '')
+
+  try {
+    const res = await fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}/messages`, {
+      method:  'POST',
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to:   toNumber,
+        type: 'text',
+        text: { body },
+      }),
+    })
+    const data = await res.json() as any
+    if (!res.ok) return { success: false, error: data.error?.message ?? 'Meta API error' }
+    return { success: true, messageId: data.messages?.[0]?.id }
   } catch (err: any) {
     return { success: false, error: err.message }
   }

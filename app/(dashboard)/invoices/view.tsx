@@ -82,7 +82,7 @@ export function InvoicesView({ invoices: initial, stats }: { invoices: Invoice[]
         </button>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total Invoices',    value: String(stats.total) },
           { label: 'Total Revenue',     value: formatCurrency(stats.totalRevenue) },
