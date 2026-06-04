@@ -33,10 +33,7 @@ export async function downloadServiceReceipt(apt: {
 
   const salonName    = apt.salonName    || 'Luxe Beauty Studio'
   const salonTagline = apt.salonTagline || 'Where Beauty Meets Excellence'
-  // Branch name takes priority as the headline; salon name becomes the subtitle
-  const headline  = apt.locationName || salonName
-  const subheader = apt.locationName ? salonName : salonTagline
-  const showTagline = !!apt.locationName
+  const headline     = apt.locationName || salonName
 
   // ── Header ──────────────────────────────────────────────────────────────
   doc.setFont('helvetica', 'bold')
@@ -47,11 +44,7 @@ export async function downloadServiceReceipt(apt: {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
   doc.setTextColor(120, 120, 120)
-  doc.text(subheader, pageW / 2, y, { align: 'center' })
-  if (showTagline) {
-    y += 4
-    doc.text(salonTagline, pageW / 2, y, { align: 'center' })
-  }
+  doc.text(salonTagline, pageW / 2, y, { align: 'center' })
 
   // Gold rule
   y += 6
