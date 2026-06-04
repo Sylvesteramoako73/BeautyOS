@@ -5,6 +5,7 @@ import { updateAppointmentStatus, createAppointment } from '@/lib/actions/appoin
 import { formatCurrency, cn } from '@/lib/utils'
 import type { Client, Staff, Service } from '@/lib/types'
 import type { Location } from '@/lib/actions/locations'
+import type { SalonSettings } from '@/lib/actions/settings'
 
 type Apt = any
 
@@ -72,12 +73,14 @@ export function AppointmentsView({
   staff,
   services,
   locations,
+  salonSettings,
 }: {
   appointments: Apt[]
   clients: Client[]
   staff: Staff[]
   services: Service[]
   locations: Location[]
+  salonSettings?: SalonSettings
 }) {
   const [appointments, setAppointments] = useState(initial)
   const [view, setView]           = useState<'list' | 'calendar'>('list')
@@ -144,6 +147,8 @@ export function AppointmentsView({
         price:    s.price ?? 0,
         duration: s.duration ?? 0,
       })),
+      salonName:    salonSettings?.salonName,
+      salonTagline: salonSettings?.tagline,
     })
   }
 

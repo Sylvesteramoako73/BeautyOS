@@ -22,6 +22,8 @@ export async function downloadServiceReceipt(apt: {
   locationName?: string | null
   notes?: string | null
   services: { name: string; price: number; duration: number }[]
+  salonName?: string
+  salonTagline?: string
 }) {
   const { jsPDF } = await import('jspdf')
   const doc    = new jsPDF({ unit: 'mm', format: 'a5' })
@@ -29,16 +31,19 @@ export async function downloadServiceReceipt(apt: {
   const margin = 16
   let y        = margin
 
+  const salonName    = apt.salonName    || 'Luxe Beauty Studio'
+  const salonTagline = apt.salonTagline || 'Where Beauty Meets Excellence'
+
   // ── Header ──────────────────────────────────────────────────────────────
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(18)
   doc.setTextColor(20, 20, 20)
-  doc.text('Luxe Beauty Studio', pageW / 2, y, { align: 'center' })
+  doc.text(salonName, pageW / 2, y, { align: 'center' })
   y += 6
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
   doc.setTextColor(120, 120, 120)
-  doc.text('Where Beauty Meets Excellence', pageW / 2, y, { align: 'center' })
+  doc.text(salonTagline, pageW / 2, y, { align: 'center' })
   if (apt.locationName) {
     y += 4
     doc.text(apt.locationName, pageW / 2, y, { align: 'center' })

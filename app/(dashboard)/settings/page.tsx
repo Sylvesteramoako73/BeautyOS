@@ -40,52 +40,63 @@ function RoleBadge({ role }: { role: Role }) {
 }
 
 function TwilioSection() {
-  const [phone, setPhone]       = useState('')
-  const [channel, setChannel]   = useState('sms')
-  const [testing, setTesting]   = useState(false)
-  const [result, setResult]     = useState<{ success: boolean; mock: boolean; error?: string } | null>(null)
+  const [recipient, setRecipient] = useState('')
+  const [channel, setChannel]     = useState('email')
+  const [testing, setTesting]     = useState(false)
+  const [result, setResult]       = useState<{ success: boolean; mock: boolean; error?: string } | null>(null)
 
   async function handleTest(e: React.FormEvent) {
     e.preventDefault()
     setTesting(true); setResult(null)
-    const res  = await fetch('/api/messaging/test', {
+    const res = await fetch('/api/messaging/test', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, channel }),
+      body: JSON.stringify({ phone: recipient, channel }),
     })
     setResult(await res.json())
     setTesting(false)
   }
 
+  const placeholder = channel === 'email' ? 'client@example.com' : '+233 24 000 0000'
+  const label       = channel === 'email' ? 'Email to test' : 'Phone to test'
+
   return (
-    <div className="space-y-4">
-      <div className="bg-amber-50 border border-amber-200 rounded-md px-4 py-3 text-xs text-amber-800 space-y-1">
-        <p className="font-semibold">Add these to your <code className="bg-amber-100 px-1 rounded">.env.local</code> to enable real messages:</p>
-        <code className="block mt-1 leading-relaxed">
-          TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxx<br/>
-          TWILIO_AUTH_TOKEN=your_auth_token<br/>
-          TWILIO_FROM_SMS=+12345678901<br/>
-          TWILIO_FROM_WHATSAPP=whatsapp:+14155238886
-        </code>
-      </div>
-      <form onSubmit={handleTest} className="flex gap-3 items-end">
-        <div className="flex-1">
-          <label className="form-label">Phone to test</label>
-          <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+233 24 000 0000" className="form-input w-full" required />
+    <div className="space-y-5">
+      <form onSubmit={handleTest} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="sm:col-span-2">
+            <label className="form-label text-sm font-medium">{label}</label>
+            <input
+              value={recipient}
+              onChange={e => setRecipient(e.target.value)}
+              placeholder={placeholder}
+              type={channel === 'email' ? 'email' : 'tel'}
+              className="form-input w-full h-11 text-base mt-1"
+              required
+            />
+          </div>
+          <div>
+            <label className="form-label text-sm font-medium">Channel</label>
+            <select
+              value={channel}
+              onChange={e => { setChannel(e.target.value); setRecipient('') }}
+              className="form-input w-full h-11 text-base mt-1"
+            >
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+              <option value="whatsapp">WhatsApp</option>
+            </select>
+          </div>
         </div>
-        <select value={channel} onChange={e => setChannel(e.target.value)} className="form-input w-32">
-          <option value="sms">SMS</option>
-          <option value="whatsapp">WhatsApp</option>
-        </select>
-        <button type="submit" disabled={testing} className="btn-primary whitespace-nowrap">
+        <button type="submit" disabled={testing} className="btn-primary h-11 px-6 text-sm">
           {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
-          Send Test
+          Send Test Message
         </button>
       </form>
       {result && (
-        <div className={`flex items-center gap-2 text-sm px-3 py-2 rounded-md border ${result.success ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
-          {result.success ? <CheckCircle className="h-4 w-4 shrink-0" /> : <XCircle className="h-4 w-4 shrink-0" />}
+        <div className={`flex items-center gap-3 text-sm px-4 py-3 rounded-md border ${result.success ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+          {result.success ? <CheckCircle className="h-5 w-5 shrink-0" /> : <XCircle className="h-5 w-5 shrink-0" />}
           {result.success
-            ? result.mock ? 'Mock mode — message logged to server console. Add Twilio credentials to send for real.' : 'Message sent successfully!'
+            ? result.mock ? 'Mock mode — message logged to server console. Configure credentials to send for real.' : 'Message sent successfully!'
             : `Failed: ${result.error}`}
         </div>
       )}
@@ -161,6 +172,67 @@ function GoogleCalendarSection() {
         <Link2 className="h-4 w-4" /> Connect Google Calendar
       </button>
     </div>
+  )
+}
+
+function BusinessSection() {
+  const [form, setForm] = useState({ salonName: '', tagline: '', phone: '', address: '', email: '' })
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving]   = useState(false)
+  const [msg, setMsg]         = useState('')
+
+  useEffect(() => {
+    fetch('/api/settings/salon')
+      .then(r => r.json())
+      .then(d => { setForm(d); setLoading(false) })
+  }, [])
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true); setMsg('')
+    await fetch('/api/settings/salon', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    })
+    setMsg('Saved.')
+    setSaving(false)
+  }
+
+  if (loading) return <div className="flex items-center gap-2 text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin" /> Loading…</div>
+
+  return (
+    <form onSubmit={handleSave} className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="col-span-2">
+          <label className="form-label">Salon / Business Name</label>
+          <input value={form.salonName} onChange={e => setForm(f => ({ ...f, salonName: e.target.value }))} placeholder="e.g. Luxe Beauty Studio" className="form-input w-full" />
+        </div>
+        <div className="col-span-2">
+          <label className="form-label">Tagline</label>
+          <input value={form.tagline} onChange={e => setForm(f => ({ ...f, tagline: e.target.value }))} placeholder="e.g. Where Beauty Meets Excellence" className="form-input w-full" />
+        </div>
+        <div>
+          <label className="form-label">Phone</label>
+          <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+233 …" className="form-input w-full" />
+        </div>
+        <div>
+          <label className="form-label">Email</label>
+          <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="form-input w-full" />
+        </div>
+        <div className="col-span-2">
+          <label className="form-label">Address</label>
+          <input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Street, City" className="form-input w-full" />
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <button type="submit" disabled={saving} className="btn-primary">
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+          Save Details
+        </button>
+        {msg && <p className="text-sm text-green-600">{msg}</p>}
+      </div>
+    </form>
   )
 }
 
@@ -364,9 +436,16 @@ export default function SettingsPage() {
           </Section>
         )}
 
+        {/* Business Details */}
+        {myRole === 'owner' && (
+          <Section title="Business Details" description="Salon name, tagline, and contact info used on receipts, certificates, and documents.">
+            <BusinessSection />
+          </Section>
+        )}
+
         {/* Messaging / Twilio */}
         {myRole === 'owner' && (
-          <Section title="Messaging (SMS / WhatsApp)" description="Configure Twilio to send real appointment reminders and automations. Without credentials, messages are logged to the server console only.">
+          <Section title="Messaging (Email / SMS / WhatsApp)" description="Test your messaging channels. Email uses Gmail SMTP. SMS and WhatsApp require Twilio credentials.">
             <TwilioSection />
           </Section>
         )}
