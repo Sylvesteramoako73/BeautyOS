@@ -108,7 +108,7 @@ export default function ClientProfilePage({ params }: { params: { id: string } }
     <div className="max-w-4xl mx-auto space-y-5">
       {/* Back */}
       <Link href="/clients" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
-        <ArrowLeft className="h-3.5 w-3.5" /> Back to Clients
+        <ArrowLeft className="h-5 w-5" /> Back to Clients
       </Link>
 
       {/* Header card */}
@@ -125,12 +125,12 @@ export default function ClientProfilePage({ params }: { params: { id: string } }
                   {client.loyaltyTier}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                  <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                  <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                   {client.loyaltyPoints} pts
                 </span>
                 {client.dateOfBirth && isBirthdayThisMonth(client.dateOfBirth) && (
                   <span className="text-xs text-pink-600 dark:text-pink-400 flex items-center gap-1 font-medium">
-                    <Cake className="h-3 w-3" /> Birthday this month!
+                    <Cake className="h-5 w-5" /> Birthday this month!
                   </span>
                 )}
               </div>
@@ -139,11 +139,11 @@ export default function ClientProfilePage({ params }: { params: { id: string } }
           <div className="flex gap-2 shrink-0">
             {client.phone && (
               <a href={`tel:${client.phone}`} className="btn-secondary text-xs">
-                <Phone className="h-3.5 w-3.5" /> Call
+                <Phone className="h-5 w-5" /> Call
               </a>
             )}
             <Link href="/appointments" className="btn-primary text-xs">
-              <Calendar className="h-3.5 w-3.5" /> Book
+              <Calendar className="h-5 w-5" /> Book
             </Link>
           </div>
         </div>
@@ -151,16 +151,16 @@ export default function ClientProfilePage({ params }: { params: { id: string } }
         {/* Contact row */}
         <div className="flex gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex-wrap">
           <span className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
-            <Phone className="h-3.5 w-3.5 text-gray-400" /> {client.phone}
+            <Phone className="h-5 w-5 text-gray-400" /> {client.phone}
           </span>
           {client.email && (
             <span className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
-              <Mail className="h-3.5 w-3.5 text-gray-400" /> {client.email}
+              <Mail className="h-5 w-5 text-gray-400" /> {client.email}
             </span>
           )}
           {client.dateOfBirth && (
             <span className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
-              <Cake className="h-3.5 w-3.5 text-gray-400" />
+              <Cake className="h-5 w-5 text-gray-400" />
               {new Date(client.dateOfBirth).toLocaleDateString('en-GH', { day: 'numeric', month: 'long' })}
               {' '}· Age {age(client.dateOfBirth)}
             </span>
@@ -178,7 +178,7 @@ export default function ClientProfilePage({ params }: { params: { id: string } }
         ].map(s => (
           <div key={s.label} className="stat-box">
             <div className="flex items-center gap-1.5 mb-2">
-              <s.icon className="h-3.5 w-3.5 text-gray-400" />
+              <s.icon className="h-5 w-5 text-gray-400" />
               <p className="text-xs text-gray-500 dark:text-gray-400">{s.label}</p>
             </div>
             <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">{s.value}</p>
@@ -193,13 +193,13 @@ export default function ClientProfilePage({ params }: { params: { id: string } }
           <div className="card p-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                <MessageSquare className="h-3.5 w-3.5 text-gray-400" /> Notes
+                <MessageSquare className="h-5 w-5 text-gray-400" /> Notes
               </h3>
               {!editingNotes
-                ? <button onClick={() => setEditingNotes(true)} className="btn-ghost h-6 w-6 p-0 justify-center"><Edit2 className="h-3 w-3" /></button>
+                ? <button onClick={() => setEditingNotes(true)} className="btn-ghost h-6 w-6 p-0 justify-center"><Edit2 className="h-5 w-5" /></button>
                 : <div className="flex gap-1">
-                    <button onClick={saveNotes} className="btn-ghost h-6 w-6 p-0 justify-center text-green-600"><Check className="h-3 w-3" /></button>
-                    <button onClick={() => { setEditingNotes(false); setNotes(client.notes ?? '') }} className="btn-ghost h-6 w-6 p-0 justify-center text-red-500"><X className="h-3 w-3" /></button>
+                    <button onClick={saveNotes} className="btn-ghost h-6 w-6 p-0 justify-center text-green-600"><Check className="h-5 w-5" /></button>
+                    <button onClick={() => { setEditingNotes(false); setNotes(client.notes ?? '') }} className="btn-ghost h-6 w-6 p-0 justify-center text-red-500"><X className="h-5 w-5" /></button>
                   </div>
               }
             </div>
@@ -214,10 +214,10 @@ export default function ClientProfilePage({ params }: { params: { id: string } }
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Tags</h3>
               {!editingTags
-                ? <button onClick={() => setEditingTags(true)} className="btn-ghost h-6 w-6 p-0 justify-center"><Edit2 className="h-3 w-3" /></button>
+                ? <button onClick={() => setEditingTags(true)} className="btn-ghost h-6 w-6 p-0 justify-center"><Edit2 className="h-5 w-5" /></button>
                 : <div className="flex gap-1">
-                    <button onClick={saveTags} className="btn-ghost h-6 w-6 p-0 justify-center text-green-600"><Check className="h-3 w-3" /></button>
-                    <button onClick={() => { setEditingTags(false); setTags(client.tags ?? '') }} className="btn-ghost h-6 w-6 p-0 justify-center text-red-500"><X className="h-3 w-3" /></button>
+                    <button onClick={saveTags} className="btn-ghost h-6 w-6 p-0 justify-center text-green-600"><Check className="h-5 w-5" /></button>
+                    <button onClick={() => { setEditingTags(false); setTags(client.tags ?? '') }} className="btn-ghost h-6 w-6 p-0 justify-center text-red-500"><X className="h-5 w-5" /></button>
                   </div>
               }
             </div>
@@ -237,7 +237,7 @@ export default function ClientProfilePage({ params }: { params: { id: string } }
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Insights</h3>
             {favouriteStaff && (
               <div className="flex items-center gap-2 text-xs">
-                <User className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                <User className="h-5 w-5 text-gray-400 shrink-0" />
                 <span className="text-gray-500 dark:text-gray-400">Favourite stylist</span>
                 <span className="font-medium text-gray-900 dark:text-gray-100 ml-auto">{favouriteStaff}</span>
               </div>
@@ -245,7 +245,7 @@ export default function ClientProfilePage({ params }: { params: { id: string } }
             {topServices.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 text-xs mb-1.5">
-                  <Scissors className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                  <Scissors className="h-5 w-5 text-gray-400 shrink-0" />
                   <span className="text-gray-500 dark:text-gray-400">Top services</span>
                 </div>
                 <div className="space-y-1 pl-5">
@@ -260,7 +260,7 @@ export default function ClientProfilePage({ params }: { params: { id: string } }
             )}
             {firstVisit && (
               <div className="flex items-center gap-2 text-xs">
-                <Gift className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                <Gift className="h-5 w-5 text-gray-400 shrink-0" />
                 <span className="text-gray-500 dark:text-gray-400">Client since</span>
                 <span className="font-medium text-gray-900 dark:text-gray-100 ml-auto">
                   {new Date(firstVisit).toLocaleDateString('en-GH', { month: 'short', year: 'numeric' })}

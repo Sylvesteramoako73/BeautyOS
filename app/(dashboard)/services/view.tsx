@@ -81,7 +81,7 @@ export function ServicesView({ services: initial }: { services: ServiceWithStats
           <h1 className="page-title">Services</h1>
           <p className="page-subtitle">{services.length} services</p>
         </div>
-        <button onClick={openNew} className="btn-primary"><Plus className="h-4 w-4" /> Add Service</button>
+        <button onClick={openNew} className="btn-primary"><Plus className="h-5 w-5" /> Add Service</button>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -99,7 +99,7 @@ export function ServicesView({ services: initial }: { services: ServiceWithStats
 
       <div className="flex gap-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input type="text" placeholder="Search services..." value={search} onChange={e => setSearch(e.target.value)} className="form-input pl-9 w-56" />
         </div>
         <select value={category} onChange={e => setCategory(e.target.value)} className="form-input w-40">
@@ -138,8 +138,8 @@ export function ServicesView({ services: initial }: { services: ServiceWithStats
                 <td className="text-right font-medium">{formatCurrency(service.price)}</td>
                 <td className="text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => openEdit(service)} className="btn-ghost h-7 w-7 p-0 justify-center"><Edit2 className="h-3.5 w-3.5" /></button>
-                    <button onClick={() => handleDelete(service.id)} className="btn-ghost h-7 w-7 p-0 justify-center text-red-500 hover:bg-red-50"><Trash2 className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => openEdit(service)} className="btn-ghost h-8 w-8 p-0 justify-center"><Edit2 className="h-5 w-5" /></button>
+                    <button onClick={() => handleDelete(service.id)} className="btn-ghost h-8 w-8 p-0 justify-center text-red-500 hover:bg-red-50"><Trash2 className="h-5 w-5" /></button>
                   </div>
                 </td>
               </tr>
@@ -155,7 +155,7 @@ export function ServicesView({ services: initial }: { services: ServiceWithStats
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-lg">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">{editService ? 'Edit Service' : 'New Service'}</h2>
-              <button onClick={closeForm} className="btn-ghost h-7 w-7 p-0 justify-center"><X className="h-4 w-4" /></button>
+              <button onClick={closeForm} className="btn-ghost h-8 w-8 p-0 justify-center"><X className="h-5 w-5" /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -187,7 +187,7 @@ export function ServicesView({ services: initial }: { services: ServiceWithStats
                     onClick={() => setForm(f => ({ ...f, isPopular: !f.isPopular }))}
                     className={`relative h-5 w-9 rounded-full transition-colors cursor-pointer focus:outline-none ${form.isPopular ? 'bg-gray-900' : 'bg-gray-200'}`}
                   >
-                    <span className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${form.isPopular ? 'translate-x-4' : ''}`} />
+                    <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${form.isPopular ? 'translate-x-4' : ''}`} />
                   </button>
                   <span className="text-sm text-gray-700 dark:text-gray-300">Mark as popular</span>
                 </div>
@@ -195,7 +195,7 @@ export function ServicesView({ services: initial }: { services: ServiceWithStats
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={closeForm} className="btn-secondary">Cancel</button>
                 <button type="submit" disabled={saving} className="btn-primary">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
                   {editService ? 'Save Changes' : 'Create Service'}
                 </button>
               </div>

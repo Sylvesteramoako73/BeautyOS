@@ -53,7 +53,7 @@ export default async function ClientPortalPage({ params }: { params: { clientId:
 
         {client.dateOfBirth && isBirthdayMonth(client.dateOfBirth) && (
           <p className="text-sm text-pink-600 dark:text-pink-400 font-medium mt-1 flex items-center justify-center gap-1">
-            <Cake className="h-4 w-4" /> Happy Birthday month! 🎂
+            <Cake className="h-5 w-5" /> Happy Birthday month! 🎂
           </p>
         )}
 
@@ -62,14 +62,14 @@ export default async function ClientPortalPage({ params }: { params: { clientId:
             {client.loyaltyTier} Member
           </span>
           <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-            <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+            <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
             {client.loyaltyPoints} loyalty points
           </span>
         </div>
 
         <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-sm text-gray-600 dark:text-gray-400">
-          <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-gray-400" />{client.phone}</span>
-          {client.email && <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-gray-400" />{client.email}</span>}
+          <span className="flex items-center gap-1.5"><Phone className="h-5 w-5 text-gray-400" />{client.phone}</span>
+          {client.email && <span className="flex items-center gap-1.5"><Mail className="h-5 w-5 text-gray-400" />{client.email}</span>}
         </div>
       </div>
 
@@ -115,7 +115,7 @@ export default async function ClientPortalPage({ params }: { params: { clientId:
                     <div className="text-right shrink-0">
                       <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(apt.totalPrice)}</p>
                       <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium mt-1 ${cfg.color}`}>
-                        <Icon className="h-3 w-3" /> {cfg.label}
+                        <Icon className="h-5 w-5" /> {cfg.label}
                       </span>
                     </div>
                   </div>
@@ -158,7 +158,7 @@ export default async function ClientPortalPage({ params }: { params: { clientId:
 
       {/* Book CTA */}
       <Link href="/book" className="btn-primary w-full justify-center text-sm py-3">
-        <Calendar className="h-4 w-4" /> Book Your Next Appointment
+        <Calendar className="h-5 w-5" /> Book Your Next Appointment
       </Link>
 
       <footer className="text-center text-xs text-gray-400 pb-4">

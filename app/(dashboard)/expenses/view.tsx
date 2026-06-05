@@ -94,10 +94,10 @@ export function ExpensesView({ expenses: initial, currentMonth, locations }: { e
         </div>
         <div className="flex gap-2">
           <button onClick={() => exportCSV(expenses)} className="btn-secondary">
-            <Download className="h-4 w-4" /> Export
+            <Download className="h-5 w-5" /> Export
           </button>
           <button onClick={() => setShowForm(true)} className="btn-primary">
-            <Plus className="h-4 w-4" /> Add Expense
+            <Plus className="h-5 w-5" /> Add Expense
           </button>
         </div>
       </div>
@@ -183,7 +183,7 @@ export function ExpensesView({ expenses: initial, currentMonth, locations }: { e
             <div className="col-span-2 flex gap-3 justify-end">
               <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Cancel</button>
               <button type="submit" disabled={saving} className="btn-primary">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
                 Save
               </button>
             </div>
@@ -234,9 +234,9 @@ export function ExpensesView({ expenses: initial, currentMonth, locations }: { e
                 <td className="text-right">
                   <button
                     onClick={() => handleDelete(exp.id)}
-                    className="btn-ghost h-7 w-7 p-0 justify-center text-red-500 hover:bg-red-50"
+                    className="btn-ghost h-8 w-8 p-0 justify-center text-red-500 hover:bg-red-50"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-5 w-5" />
                   </button>
                 </td>
               </tr>

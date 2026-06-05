@@ -35,7 +35,7 @@ export function ClientsView({ clients: initial }: Props) {
 
   const SortIcon = ({ col }: { col: string }) =>
     sort.col === col
-      ? sort.dir === 'asc' ? <ChevronUp className="h-3 w-3 inline ml-1" /> : <ChevronDown className="h-3 w-3 inline ml-1" />
+      ? sort.dir === 'asc' ? <ChevronUp className="h-5 w-5 inline ml-1" /> : <ChevronDown className="h-5 w-5 inline ml-1" />
       : null
 
   let filtered = clients.filter(c => {
@@ -103,7 +103,7 @@ export function ClientsView({ clients: initial }: Props) {
           <p className="page-subtitle">{clients.length} clients · {formatCurrency(totalRevenue)} lifetime value</p>
         </div>
         <button onClick={() => setShowForm(!showForm)} className="btn-primary">
-          <Plus className="h-4 w-4" /> Add Client
+          <Plus className="h-5 w-5" /> Add Client
         </button>
       </div>
 
@@ -120,7 +120,7 @@ export function ClientsView({ clients: initial }: Props) {
             <div className="col-span-2 flex gap-3 justify-end">
               <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Cancel</button>
               <button type="submit" disabled={pending} className="btn-primary">
-                {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                {pending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
                 Save Client
               </button>
             </div>
@@ -146,7 +146,7 @@ export function ClientsView({ clients: initial }: Props) {
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input type="text" placeholder="Search by name, phone, email..." value={search} onChange={e => setSearch(e.target.value)} className="form-input pl-9 w-64" />
         </div>
         <select value={tier} onChange={e => setTier(e.target.value)} className="form-input w-36">
@@ -182,7 +182,7 @@ export function ClientsView({ clients: initial }: Props) {
                         className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-700"
                         title="View profile"
                       >
-                        <ExternalLink className="h-3 w-3" />
+                        <ExternalLink className="h-5 w-5" />
                       </button>
                     </div>
                   </td>
@@ -210,8 +210,8 @@ export function ClientsView({ clients: initial }: Props) {
                         <div>
                           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Contact</p>
                           <div className="space-y-1.5 text-gray-700">
-                            <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-gray-400" />{client.phone}</div>
-                            {client.email && <div className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-gray-400" />{client.email}</div>}
+                            <div className="flex items-center gap-2"><Phone className="h-5 w-5 text-gray-400" />{client.phone}</div>
+                            {client.email && <div className="flex items-center gap-2"><Mail className="h-5 w-5 text-gray-400" />{client.email}</div>}
                           </div>
                         </div>
                         <div>
@@ -229,21 +229,21 @@ export function ClientsView({ clients: initial }: Props) {
                         </div>
                       </div>
                       <div className="flex gap-2 mt-4 flex-wrap">
-                        <button className="btn-secondary"><Calendar className="h-3.5 w-3.5" /> Book Appointment</button>
-                        {client.phone && <a href={`tel:${client.phone}`} className="btn-secondary"><Phone className="h-3.5 w-3.5" /> Call</a>}
-                        {client.email && <a href={`mailto:${client.email}`} className="btn-secondary"><Mail className="h-3.5 w-3.5" /> Email</a>}
+                        <button className="btn-secondary"><Calendar className="h-5 w-5" /> Book Appointment</button>
+                        {client.phone && <a href={`tel:${client.phone}`} className="btn-secondary"><Phone className="h-5 w-5" /> Call</a>}
+                        {client.email && <a href={`mailto:${client.email}`} className="btn-secondary"><Mail className="h-5 w-5" /> Email</a>}
                         <button
                           className="btn-secondary"
                           onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/portal/${client.id}`) }}
                           title="Copy client portal link"
                         >
-                          <Link2 className="h-3.5 w-3.5" /> Portal Link
+                          <Link2 className="h-5 w-5" /> Portal Link
                         </button>
                         <button
                           className="btn-secondary"
                           onClick={e => openEdit(client, e)}
                         >
-                          <Edit2 className="h-3.5 w-3.5" /> Edit
+                          <Edit2 className="h-5 w-5" /> Edit
                         </button>
                         <button
                           className="btn-ghost text-red-600 hover:bg-red-50 dark:hover:bg-red-950 ml-auto"
@@ -268,8 +268,8 @@ export function ClientsView({ clients: initial }: Props) {
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">Edit Client</h2>
-              <button onClick={() => setEditClient(null)} className="btn-ghost h-7 w-7 p-0 justify-center">
-                <X className="h-4 w-4" />
+              <button onClick={() => setEditClient(null)} className="btn-ghost h-8 w-8 p-0 justify-center">
+                <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
@@ -298,7 +298,7 @@ export function ClientsView({ clients: initial }: Props) {
               <div className="flex justify-end gap-3 pt-1">
                 <button type="button" onClick={() => setEditClient(null)} className="btn-secondary">Cancel</button>
                 <button type="submit" disabled={saving} className="btn-primary">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
                   Save Changes
                 </button>
               </div>

@@ -78,7 +78,7 @@ export function InvoicesView({ invoices: initial, stats }: { invoices: Invoice[]
           <p className="page-subtitle">{stats.total} total · {formatCurrency(stats.totalRevenue)} lifetime revenue</p>
         </div>
         <button onClick={() => exportCSV(filtered)} className="btn-secondary">
-          <Download className="h-4 w-4" /> Export CSV
+          <Download className="h-5 w-5" /> Export CSV
         </button>
       </div>
 
@@ -98,7 +98,7 @@ export function InvoicesView({ invoices: initial, stats }: { invoices: Invoice[]
 
       <div className="flex gap-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input type="text" placeholder="Search invoice number…" value={search}
             onChange={e => setSearch(e.target.value)} className="form-input pl-9 w-56" />
         </div>
@@ -129,7 +129,7 @@ export function InvoicesView({ invoices: initial, stats }: { invoices: Invoice[]
                 </p>
               </div>
               <span className="font-semibold text-gray-900">{formatCurrency(inv.total)}</span>
-              {expanded === inv.id ? <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" /> : <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />}
+              {expanded === inv.id ? <ChevronUp className="h-5 w-5 text-gray-400 shrink-0" /> : <ChevronDown className="h-5 w-5 text-gray-400 shrink-0" />}
             </div>
 
             {expanded === inv.id && (
@@ -153,10 +153,10 @@ export function InvoicesView({ invoices: initial, stats }: { invoices: Invoice[]
                 </div>
                 <div className="flex gap-2 mt-3">
                   <button onClick={() => printReceipt(inv)} className="btn-secondary text-xs">
-                    <Printer className="h-3.5 w-3.5" /> Print Receipt
+                    <Printer className="h-5 w-5" /> Print Receipt
                   </button>
                   <button onClick={() => downloadInvoicePDF(inv)} className="btn-secondary text-xs">
-                    <FileDown className="h-3.5 w-3.5" /> Download PDF
+                    <FileDown className="h-5 w-5" /> Download PDF
                   </button>
                 </div>
               </div>

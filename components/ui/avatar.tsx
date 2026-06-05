@@ -61,9 +61,9 @@ const dotSizeMap = {
   xs: 'h-1.5 w-1.5 bottom-0 right-0',
   sm: 'h-2 w-2 bottom-0 right-0',
   md: 'h-2.5 w-2.5 bottom-0 right-0',
-  lg: 'h-3 w-3 bottom-0.5 right-0.5',
-  xl: 'h-3.5 w-3.5 bottom-1 right-1',
-  '2xl': 'h-4 w-4 bottom-1.5 right-1.5',
+  lg: 'h-5 w-5 bottom-0.5 right-0.5',
+  xl: 'h-5 w-5 bottom-1 right-1',
+  '2xl': 'h-5 w-5 bottom-1.5 right-1.5',
 }
 
 export function Avatar({ src, name, size = 'md', className, fallbackClassName, online }: AvatarProps) {

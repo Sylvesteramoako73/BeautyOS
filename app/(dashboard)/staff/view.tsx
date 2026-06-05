@@ -130,7 +130,7 @@ export function StaffView({ staff: initial, locations }: { staff: StaffWithStats
           <p className="page-subtitle">{staff.length} team members · {staff.filter(s => s.isAvailable).length} available</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={openNew} className="btn-primary"><Plus className="h-4 w-4" /> Add Staff</button>
+          <button onClick={openNew} className="btn-primary"><Plus className="h-5 w-5" /> Add Staff</button>
         </div>
       </div>
 
@@ -149,7 +149,7 @@ export function StaffView({ staff: initial, locations }: { staff: StaffWithStats
       </div>
 
       <div className="relative w-64">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
         <input type="text" placeholder="Search staff..." value={search} onChange={e => setSearch(e.target.value)} className="form-input pl-9" />
       </div>
 
@@ -167,7 +167,7 @@ export function StaffView({ staff: initial, locations }: { staff: StaffWithStats
               <tr key={member.id}>
                 <td>
                   <div className="flex items-center gap-2.5">
-                    <div className="h-7 w-7 rounded-full bg-gray-200 text-gray-600 text-xs font-semibold flex items-center justify-center shrink-0">
+                    <div className="h-8 w-8 rounded-full bg-gray-200 text-gray-600 text-xs font-semibold flex items-center justify-center shrink-0">
                       {member.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                     </div>
                     <div>
@@ -179,7 +179,7 @@ export function StaffView({ staff: initial, locations }: { staff: StaffWithStats
                 <td className="text-gray-600">{member.role}</td>
                 <td>
                   {member.locationName
-                    ? <span className="flex items-center gap-1 text-xs text-gray-600"><MapPin className="h-3 w-3 shrink-0" />{member.locationName}</span>
+                    ? <span className="flex items-center gap-1 text-xs text-gray-600"><MapPin className="h-5 w-5 shrink-0" />{member.locationName}</span>
                     : <span className="text-xs text-gray-400">—</span>}
                 </td>
                 <td>
@@ -193,7 +193,7 @@ export function StaffView({ staff: initial, locations }: { staff: StaffWithStats
                 <td className="text-gray-700">{member.completedToday ?? 0}/{member.todayBookings ?? 0}</td>
                 <td>
                   <span className="flex items-center gap-1 text-gray-700">
-                    <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                    <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                     {member.rating}
                   </span>
                 </td>
@@ -212,18 +212,18 @@ export function StaffView({ staff: initial, locations }: { staff: StaffWithStats
                 <td>
                   <div className="flex justify-end gap-1">
                     {member.phone && (
-                      <a href={`tel:${member.phone}`} className="btn-ghost h-7 w-7 p-0 justify-center">
-                        <Phone className="h-3.5 w-3.5" />
+                      <a href={`tel:${member.phone}`} className="btn-ghost h-8 w-8 p-0 justify-center">
+                        <Phone className="h-5 w-5" />
                       </a>
                     )}
-                    <button onClick={() => openSchedule(member)} className="btn-ghost h-7 w-7 p-0 justify-center" title="Working hours">
-                      <Clock className="h-3.5 w-3.5" />
+                    <button onClick={() => openSchedule(member)} className="btn-ghost h-8 w-8 p-0 justify-center" title="Working hours">
+                      <Clock className="h-5 w-5" />
                     </button>
-                    <button onClick={() => downloadReport(member)} className="btn-ghost h-7 w-7 p-0 justify-center" title="Download report">
-                      <FileDown className="h-3.5 w-3.5" />
+                    <button onClick={() => downloadReport(member)} className="btn-ghost h-8 w-8 p-0 justify-center" title="Download report">
+                      <FileDown className="h-5 w-5" />
                     </button>
-                    <button onClick={() => openEdit(member)} className="btn-ghost h-7 w-7 p-0 justify-center">
-                      <Edit2 className="h-3.5 w-3.5" />
+                    <button onClick={() => openEdit(member)} className="btn-ghost h-8 w-8 p-0 justify-center">
+                      <Edit2 className="h-5 w-5" />
                     </button>
                   </div>
                 </td>
@@ -239,7 +239,7 @@ export function StaffView({ staff: initial, locations }: { staff: StaffWithStats
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="font-semibold text-gray-900">{editMember ? 'Edit Staff Member' : 'New Staff Member'}</h2>
-              <button onClick={closeForm} className="btn-ghost h-7 w-7 p-0 justify-center"><X className="h-4 w-4" /></button>
+              <button onClick={closeForm} className="btn-ghost h-8 w-8 p-0 justify-center"><X className="h-5 w-5" /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -284,7 +284,7 @@ export function StaffView({ staff: initial, locations }: { staff: StaffWithStats
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={closeForm} className="btn-secondary">Cancel</button>
                 <button type="submit" disabled={saving} className="btn-primary">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
                   {editMember ? 'Save Changes' : 'Add Staff'}
                 </button>
               </div>
@@ -302,8 +302,8 @@ export function StaffView({ staff: initial, locations }: { staff: StaffWithStats
                 <h2 className="font-semibold text-gray-900">Working Hours</h2>
                 <p className="text-xs text-gray-500 mt-0.5">{scheduleFor.name}</p>
               </div>
-              <button onClick={() => setScheduleFor(null)} className="btn-ghost h-7 w-7 p-0 justify-center">
-                <X className="h-4 w-4" />
+              <button onClick={() => setScheduleFor(null)} className="btn-ghost h-8 w-8 p-0 justify-center">
+                <X className="h-5 w-5" />
               </button>
             </div>
             <div className="p-6 space-y-3">
@@ -315,7 +315,7 @@ export function StaffView({ staff: initial, locations }: { staff: StaffWithStats
                       onClick={() => setSchedule(s => ({ ...s, [day]: { ...s[day], enabled: !s[day].enabled } }))}
                       className={cn('relative h-5 w-9 rounded-full transition-colors cursor-pointer shrink-0', schedule[day].enabled ? 'bg-gray-900' : 'bg-gray-200')}
                     >
-                      <span className={cn('absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform', schedule[day].enabled && 'translate-x-4')} />
+                      <span className={cn('absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform', schedule[day].enabled && 'translate-x-4')} />
                     </button>
                     <span className="text-sm capitalize text-gray-700">{day.slice(0, 3)}</span>
                   </div>
@@ -344,7 +344,7 @@ export function StaffView({ staff: initial, locations }: { staff: StaffWithStats
             <div className="flex justify-end gap-3 px-6 pb-5">
               <button onClick={() => setScheduleFor(null)} className="btn-secondary">Cancel</button>
               <button onClick={saveSchedule} className="btn-primary">
-                <Check className="h-4 w-4" /> Save Schedule
+                <Check className="h-5 w-5" /> Save Schedule
               </button>
             </div>
           </div>

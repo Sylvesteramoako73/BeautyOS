@@ -147,7 +147,7 @@ export default function LoginPage() {
                   onClick={() => setShowPass(!showPass)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                 >
-                  {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPass ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
@@ -165,13 +165,13 @@ export default function LoginPage() {
             >
               {loading ? (
                 <span className="flex items-center gap-2">
-                  <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   {mode === 'signin' ? 'Signing in…' : 'Creating account…'}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
                   {mode === 'signin' ? 'Sign in' : 'Create account'}
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-5 w-5" />
                 </span>
               )}
             </button>

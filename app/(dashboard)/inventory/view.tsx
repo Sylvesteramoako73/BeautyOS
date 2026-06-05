@@ -89,7 +89,7 @@ export function InventoryView({ products: initial }: { products: Product[] }) {
           <h1 className="page-title">Inventory</h1>
           <p className="page-subtitle">{products.length} products · {formatCurrency(totalValue)} stock value</p>
         </div>
-        <button onClick={openNew} className="btn-primary"><Plus className="h-4 w-4" /> Add Product</button>
+        <button onClick={openNew} className="btn-primary"><Plus className="h-5 w-5" /> Add Product</button>
       </div>
 
       {/* Stats */}
@@ -100,7 +100,7 @@ export function InventoryView({ products: initial }: { products: Product[] }) {
         </div>
         <div className={cn('stat-box', lowStock.length > 0 && 'border-red-300 dark:border-red-700')}>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">
-            {lowStock.length > 0 && <AlertTriangle className="h-3 w-3 text-red-500" />}
+            {lowStock.length > 0 && <AlertTriangle className="h-5 w-5 text-red-500" />}
             Low Stock
           </p>
           <p className={cn('text-2xl font-semibold', lowStock.length > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100')}>
@@ -117,7 +117,7 @@ export function InventoryView({ products: initial }: { products: Product[] }) {
       {lowStock.length > 0 && (
         <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">
           <p className="text-sm font-semibold text-red-800 dark:text-red-300 flex items-center gap-2 mb-1">
-            <AlertTriangle className="h-4 w-4" /> Low stock alert
+            <AlertTriangle className="h-5 w-5" /> Low stock alert
           </p>
           <p className="text-xs text-red-700 dark:text-red-400">
             {lowStock.map(p => `${p.name} (${p.stockLevel} ${p.unit} left)`).join(' · ')}
@@ -128,7 +128,7 @@ export function InventoryView({ products: initial }: { products: Product[] }) {
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input type="text" placeholder="Search products…" value={search} onChange={e => setSearch(e.target.value)} className="form-input pl-9 w-56" />
         </div>
         <select value={catFilter} onChange={e => setCat(e.target.value)} className="form-input w-40">
@@ -143,7 +143,7 @@ export function InventoryView({ products: initial }: { products: Product[] }) {
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-900">
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">{editProd ? 'Edit Product' : 'New Product'}</h2>
-              <button onClick={closeForm} className="btn-ghost h-7 w-7 p-0 justify-center"><X className="h-4 w-4" /></button>
+              <button onClick={closeForm} className="btn-ghost h-8 w-8 p-0 justify-center"><X className="h-5 w-5" /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 grid grid-cols-2 gap-4">
               <div className="col-span-2">
@@ -187,7 +187,7 @@ export function InventoryView({ products: initial }: { products: Product[] }) {
               <div className="col-span-2 flex justify-end gap-3 pt-2">
                 <button type="button" onClick={closeForm} className="btn-secondary">Cancel</button>
                 <button type="submit" disabled={saving} className="btn-primary">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
                   {editProd ? 'Save Changes' : 'Add Product'}
                 </button>
               </div>
@@ -216,7 +216,7 @@ export function InventoryView({ products: initial }: { products: Product[] }) {
                   <tr key={p.id} onClick={() => setExpanded(isExp ? null : p.id)}>
                     <td>
                       <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4 text-gray-400 shrink-0" />
+                        <Package className="h-5 w-5 text-gray-400 shrink-0" />
                         <div>
                           <p className="font-medium text-gray-900 dark:text-gray-100">{p.name}</p>
                           {p.brand && <p className="text-xs text-gray-500 dark:text-gray-400">{p.brand}</p>}
@@ -229,7 +229,7 @@ export function InventoryView({ products: initial }: { products: Product[] }) {
                       <span className={cn('font-semibold', isLow ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100')}>
                         {p.stockLevel} {p.unit}
                       </span>
-                      {isLow && <AlertTriangle className="h-3.5 w-3.5 text-red-500 inline ml-1" />}
+                      {isLow && <AlertTriangle className="h-5 w-5 text-red-500 inline ml-1" />}
                     </td>
                     <td className="text-gray-600 dark:text-gray-400">{formatCurrency(p.costPrice)}</td>
                     <td className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(p.sellingPrice)}</td>
@@ -241,10 +241,10 @@ export function InventoryView({ products: initial }: { products: Product[] }) {
                     <td>
                       <div className="flex justify-end gap-1" onClick={e => e.stopPropagation()}>
                         <button onClick={() => setAdjId(isAdj ? null : p.id)} className="btn-ghost h-7 px-2 text-xs" title="Adjust stock">
-                          {isExp ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                          {isExp ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                         </button>
-                        <button onClick={() => openEdit(p)} className="btn-ghost h-7 w-7 p-0 justify-center"><Edit2 className="h-3.5 w-3.5" /></button>
-                        <button onClick={() => handleDelete(p.id)} className="btn-ghost h-7 w-7 p-0 justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-950"><Trash2 className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => openEdit(p)} className="btn-ghost h-8 w-8 p-0 justify-center"><Edit2 className="h-5 w-5" /></button>
+                        <button onClick={() => handleDelete(p.id)} className="btn-ghost h-8 w-8 p-0 justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-950"><Trash2 className="h-5 w-5" /></button>
                       </div>
                     </td>
                   </tr>
@@ -254,17 +254,17 @@ export function InventoryView({ products: initial }: { products: Product[] }) {
                         <div className="flex items-center gap-3">
                           <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Adjust stock:</span>
                           <div className="flex items-center gap-1">
-                            <button onClick={() => setAdjDelta(d => String((parseInt(d) || 0) - 1))} className="btn-ghost h-7 w-7 p-0 justify-center"><ArrowDown className="h-3.5 w-3.5" /></button>
+                            <button onClick={() => setAdjDelta(d => String((parseInt(d) || 0) - 1))} className="btn-ghost h-8 w-8 p-0 justify-center"><ArrowDown className="h-5 w-5" /></button>
                             <input
                               type="number" value={adjDelta} placeholder="±qty"
                               onChange={e => setAdjDelta(e.target.value)}
                               className="form-input w-20 text-center text-sm"
                             />
-                            <button onClick={() => setAdjDelta(d => String((parseInt(d) || 0) + 1))} className="btn-ghost h-7 w-7 p-0 justify-center"><ArrowUp className="h-3.5 w-3.5" /></button>
+                            <button onClick={() => setAdjDelta(d => String((parseInt(d) || 0) + 1))} className="btn-ghost h-8 w-8 p-0 justify-center"><ArrowUp className="h-5 w-5" /></button>
                           </div>
                           <input value={adjNote} onChange={e => setAdjNote(e.target.value)} placeholder="Reason (optional)" className="form-input flex-1 text-sm" />
                           <button onClick={() => handleAdjust(p.id)} className="btn-primary h-8 px-3 text-xs">
-                            <Check className="h-3.5 w-3.5" /> Apply
+                            <Check className="h-5 w-5" /> Apply
                           </button>
                           <button onClick={() => { setExpanded(null); setAdjDelta(''); setAdjNote('') }} className="btn-secondary h-8 px-3 text-xs">Cancel</button>
                         </div>

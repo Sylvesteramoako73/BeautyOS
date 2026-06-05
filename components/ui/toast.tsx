@@ -48,10 +48,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 STYLES[t.type]
               )}
             >
-              <Icon className="h-4 w-4 shrink-0 mt-0.5" />
+              <Icon className="h-5 w-5 shrink-0 mt-0.5" />
               <p className="flex-1 leading-snug">{t.message}</p>
               <button onClick={() => dismiss(t.id)} className="opacity-60 hover:opacity-100 transition-opacity">
-                <X className="h-3.5 w-3.5" />
+                <X className="h-5 w-5" />
               </button>
             </div>
           )

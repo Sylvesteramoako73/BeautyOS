@@ -29,7 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
             onClick={() => this.setState({ error: null })}
             className="btn-secondary"
           >
-            <RefreshCw className="h-4 w-4" /> Try again
+            <RefreshCw className="h-5 w-5" /> Try again
           </button>
         </div>
       )

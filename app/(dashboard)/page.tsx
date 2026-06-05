@@ -12,8 +12,8 @@ function StatBox({ label, value, sub, up }: { label: string; value: string; sub:
       <p className="text-xs text-gray-500 font-medium mb-2">{label}</p>
       <p className="text-2xl font-semibold text-gray-900 mb-1">{value}</p>
       <p className={`text-xs flex items-center gap-1 ${up === true ? 'text-green-600' : up === false ? 'text-red-600' : 'text-gray-500'}`}>
-        {up === true  && <TrendingUp  className="h-3 w-3" />}
-        {up === false && <TrendingDown className="h-3 w-3" />}
+        {up === true  && <TrendingUp  className="h-5 w-5" />}
+        {up === false && <TrendingDown className="h-5 w-5" />}
         {sub}
       </p>
     </div>
@@ -54,7 +54,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-200">
             <h2 className="font-semibold text-gray-900 text-sm">Today's Appointments</h2>
             <Link href="/appointments" className="text-xs text-gray-500 hover:text-gray-900 flex items-center gap-1">
-              View all <ChevronRight className="h-3 w-3" />
+              View all <ChevronRight className="h-5 w-5" />
             </Link>
           </div>
           {todayApts.length === 0 ? (
@@ -130,18 +130,18 @@ export default async function DashboardPage() {
             <div className="divide-y divide-gray-100">
               {stats.revenueGrowth > 0 && (
                 <div className="flex gap-3 px-4 py-3">
-                  <TrendingUp className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
+                  <TrendingUp className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
                   <p className="text-xs text-gray-600">Revenue up {stats.revenueGrowth}% this month.</p>
                 </div>
               )}
               <div className="flex gap-3 px-4 py-3">
-                <AlertCircle className="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" />
+                <AlertCircle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-gray-600">
                   Check <Link href="/automations" className="underline">Automations</Link> to send re-engagement messages to inactive clients.
                 </p>
               </div>
               <div className="flex gap-3 px-4 py-3">
-                <Check className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                <Check className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-gray-600">{stats.totalClients} active clients registered.</p>
               </div>
             </div>

@@ -75,7 +75,7 @@ export function GiftCardsView({ cards: initial }: { cards: GiftCard[] }) {
           <p className="page-subtitle">{cards.length} active cards</p>
         </div>
         <button onClick={() => setShowForm(true)} className="btn-primary">
-          <Plus className="h-4 w-4" /> Issue Gift Card
+          <Plus className="h-5 w-5" /> Issue Gift Card
         </button>
       </div>
 
@@ -100,8 +100,8 @@ export function GiftCardsView({ cards: initial }: { cards: GiftCard[] }) {
         <div className="card p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900 dark:text-gray-100">Issue New Gift Card</h3>
-            <button onClick={() => setShowForm(false)} className="btn-ghost h-7 w-7 p-0 justify-center">
-              <X className="h-4 w-4" />
+            <button onClick={() => setShowForm(false)} className="btn-ghost h-8 w-8 p-0 justify-center">
+              <X className="h-5 w-5" />
             </button>
           </div>
           <form onSubmit={handleIssue} className="grid grid-cols-2 gap-4">
@@ -138,7 +138,7 @@ export function GiftCardsView({ cards: initial }: { cards: GiftCard[] }) {
             <div className="col-span-2 flex justify-end gap-3">
               <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Cancel</button>
               <button type="submit" disabled={saving} className="btn-primary">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gift className="h-4 w-4" />}
+                {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Gift className="h-5 w-5" />}
                 Issue Card
               </button>
             </div>
@@ -159,7 +159,7 @@ export function GiftCardsView({ cards: initial }: { cards: GiftCard[] }) {
             >
               {/* Icon */}
               <div className="h-9 w-9 rounded-lg bg-gray-900 dark:bg-gray-100 flex items-center justify-center shrink-0">
-                <CreditCard className="h-4 w-4 text-white dark:text-gray-900" />
+                <CreditCard className="h-5 w-5 text-white dark:text-gray-900" />
               </div>
 
               {/* Code + recipient */}
@@ -171,7 +171,7 @@ export function GiftCardsView({ cards: initial }: { cards: GiftCard[] }) {
                     className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                     title="Copy code"
                   >
-                    {copied === card.code ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                    {copied === card.code ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
                   </button>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -187,8 +187,8 @@ export function GiftCardsView({ cards: initial }: { cards: GiftCard[] }) {
               </div>
 
               {expanded === card.id
-                ? <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" />
-                : <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />}
+                ? <ChevronUp className="h-5 w-5 text-gray-400 shrink-0" />
+                : <ChevronDown className="h-5 w-5 text-gray-400 shrink-0" />}
             </div>
 
             {expanded === card.id && (
@@ -221,7 +221,7 @@ export function GiftCardsView({ cards: initial }: { cards: GiftCard[] }) {
                     onClick={() => handleVoid(card.id)}
                     className="btn-ghost text-red-600 hover:bg-red-50 dark:hover:bg-red-950 text-xs"
                   >
-                    <Ban className="h-3.5 w-3.5" /> Void Card
+                    <Ban className="h-5 w-5" /> Void Card
                   </button>
                 </div>
               </div>

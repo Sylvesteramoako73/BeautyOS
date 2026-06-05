@@ -76,7 +76,7 @@ export function BookingView({ services, staff, locations }: { services: Service[
   if (done) return (
     <div className="card p-8 text-center">
       <div className="h-14 w-14 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mx-auto mb-4">
-        <Check className="h-7 w-7 text-green-600 dark:text-green-400" />
+        <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
       </div>
       <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Booking Requested!</h2>
       <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Thank you, {name}. We'll confirm your appointment shortly.</p>
@@ -102,7 +102,7 @@ export function BookingView({ services, staff, locations }: { services: Service[
               step === i + 1 ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900' :
               step > i + 1  ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800' :
               'bg-white text-gray-400 border border-gray-200 dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700')}>
-              {step > i + 1 ? <Check className="h-3.5 w-3.5" /> : <span className="text-xs font-bold">{i + 1}</span>}
+              {step > i + 1 ? <Check className="h-5 w-5" /> : <span className="text-xs font-bold">{i + 1}</span>}
               {label}
             </div>
             {i < steps.length - 1 && <div className="w-4 h-px bg-gray-200 dark:bg-gray-700" />}
@@ -133,7 +133,7 @@ export function BookingView({ services, staff, locations }: { services: Service[
                     <p className={cn('text-xs mt-0.5', locationId === loc.id ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400')}>{loc.address}</p>
                     <p className={cn('text-xs', locationId === loc.id ? 'text-gray-300' : 'text-gray-400')}>{loc.phone}</p>
                   </div>
-                  {locationId === loc.id && <Check className="h-4 w-4 text-white dark:text-gray-200 ml-auto shrink-0 mt-0.5" />}
+                  {locationId === loc.id && <Check className="h-5 w-5 text-white dark:text-gray-200 ml-auto shrink-0 mt-0.5" />}
                 </div>
               ))}
             </div>
@@ -159,7 +159,7 @@ export function BookingView({ services, staff, locations }: { services: Service[
                       </div>
                       <div className="flex items-center gap-3">
                         <span className={cn('text-sm font-medium', sel ? 'text-white' : 'text-gray-700 dark:text-gray-300')}>{formatCurrency(svc.price)}</span>
-                        {sel && <Check className="h-4 w-4 text-white" />}
+                        {sel && <Check className="h-5 w-5 text-white" />}
                       </div>
                     </div>
                   )
@@ -174,7 +174,7 @@ export function BookingView({ services, staff, locations }: { services: Service[
           <div className="p-5 space-y-5">
             {selectedLocation && (
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-md px-3 py-2">
-                <MapPin className="h-4 w-4 shrink-0" />
+                <MapPin className="h-5 w-5 shrink-0" />
                 <span>{selectedLocation.name} · {selectedLocation.address}</span>
               </div>
             )}
@@ -259,7 +259,7 @@ export function BookingView({ services, staff, locations }: { services: Service[
 
       {/* Navigation */}
       <div className="flex gap-2">
-        {step > 1 && <button onClick={() => setStep(s => s - 1)} className="btn-secondary"><ChevronLeft className="h-4 w-4" /></button>}
+        {step > 1 && <button onClick={() => setStep(s => s - 1)} className="btn-secondary"><ChevronLeft className="h-5 w-5" /></button>}
         {step < steps.length ? (
           <button
             onClick={() => setStep(s => s + 1)}
@@ -270,11 +270,11 @@ export function BookingView({ services, staff, locations }: { services: Service[
             }
             className="btn-primary flex-1 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Continue <ArrowRight className="h-4 w-4" />
+            Continue <ArrowRight className="h-5 w-5" />
           </button>
         ) : (
           <button form="booking-form" type="submit" disabled={loading} className="btn-primary flex-1 disabled:opacity-40">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
             Confirm Booking
           </button>
         )}

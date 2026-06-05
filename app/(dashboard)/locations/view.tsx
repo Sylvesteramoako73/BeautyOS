@@ -49,7 +49,7 @@ export function LocationsView({ locations: initial }: { locations: LocationStats
           <h1 className="page-title">Locations</h1>
           <p className="page-subtitle">{locations.length} branch{locations.length !== 1 ? 'es' : ''}</p>
         </div>
-        <button onClick={openNew} className="btn-primary"><Plus className="h-4 w-4" /> Add Location</button>
+        <button onClick={openNew} className="btn-primary"><Plus className="h-5 w-5" /> Add Location</button>
       </div>
 
       {/* Network summary */}
@@ -73,7 +73,7 @@ export function LocationsView({ locations: initial }: { locations: LocationStats
         <div className="card p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900 dark:text-gray-100">{editLoc ? 'Edit Location' : 'New Location'}</h3>
-            <button onClick={closeForm} className="btn-ghost h-7 w-7 p-0 justify-center"><X className="h-4 w-4" /></button>
+            <button onClick={closeForm} className="btn-ghost h-8 w-8 p-0 justify-center"><X className="h-5 w-5" /></button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -93,7 +93,7 @@ export function LocationsView({ locations: initial }: { locations: LocationStats
             <div className="flex gap-3 justify-end">
               <button type="button" onClick={closeForm} className="btn-secondary">Cancel</button>
               <button type="submit" disabled={saving} className="btn-primary">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
                 {editLoc ? 'Save Changes' : 'Create Location'}
               </button>
             </div>
@@ -117,30 +117,30 @@ export function LocationsView({ locations: initial }: { locations: LocationStats
                     <p className="font-semibold text-gray-900 dark:text-gray-100">{loc.name}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{loc.address}</p>
                     <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                      <Phone className="h-3 w-3" /> {loc.phone}
+                      <Phone className="h-5 w-5" /> {loc.phone}
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-1 shrink-0">
-                  <button onClick={() => openEdit(loc)} className="btn-ghost h-7 w-7 p-0 justify-center"><Edit2 className="h-3.5 w-3.5" /></button>
-                  <button onClick={() => handleDelete(loc.id)} className="btn-ghost h-7 w-7 p-0 justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-950"><Trash2 className="h-3.5 w-3.5" /></button>
+                  <button onClick={() => openEdit(loc)} className="btn-ghost h-8 w-8 p-0 justify-center"><Edit2 className="h-5 w-5" /></button>
+                  <button onClick={() => handleDelete(loc.id)} className="btn-ghost h-8 w-8 p-0 justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-950"><Trash2 className="h-5 w-5" /></button>
                 </div>
               </div>
 
               {/* Stats row */}
               <div className="grid grid-cols-3 gap-3 pt-1 border-t border-gray-100 dark:border-gray-800">
                 <div>
-                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-0.5"><Calendar className="h-3 w-3" /> Today</p>
+                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-0.5"><Calendar className="h-5 w-5" /> Today</p>
                   <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{loc.todayBookings}</p>
                   <p className="text-xs text-gray-400">bookings</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-0.5"><TrendingUp className="h-3 w-3" /> This Month</p>
+                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-0.5"><TrendingUp className="h-5 w-5" /> This Month</p>
                   <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(loc.monthRevenue)}</p>
                   <p className="text-xs text-gray-400">{loc.monthBookings} bookings</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-0.5"><Users className="h-3 w-3" /> Staff</p>
+                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-0.5"><Users className="h-5 w-5" /> Staff</p>
                   <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{loc.staffCount}</p>
                   <p className="text-xs text-gray-400">assigned</p>
                 </div>

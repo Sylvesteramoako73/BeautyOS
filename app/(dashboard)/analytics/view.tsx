@@ -27,7 +27,7 @@ const KPI = ({ label, value, change, changeLabel }: { label: string; value: stri
     <p className="text-xs text-gray-500 mb-2">{label}</p>
     <p className="text-2xl font-semibold text-gray-900 mb-1">{value}</p>
     <p className={`text-xs flex items-center gap-1 ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-      {change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+      {change >= 0 ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />}
       {Math.abs(change)}% {changeLabel}
     </p>
   </div>
@@ -89,7 +89,7 @@ export function AnalyticsView({ initialData }: { initialData: AnalyticsData }) {
               </button>
             ))}
           </div>
-          <button className="btn-secondary"><Download className="h-4 w-4" /> Export</button>
+          <button className="btn-secondary"><Download className="h-5 w-5" /> Export</button>
         </div>
       </div>
 

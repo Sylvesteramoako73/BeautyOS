@@ -14,7 +14,7 @@ export function LocationSwitcher() {
   if (lockedLocationId) {
     return (
       <div className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-        <MapPin className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+        <MapPin className="h-5 w-5 text-gray-400 shrink-0" />
         <span className="max-w-[140px] truncate">{activeName}</span>
       </div>
     )
@@ -26,9 +26,9 @@ export function LocationSwitcher() {
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
       >
-        <MapPin className="h-3.5 w-3.5 text-gray-400" />
+        <MapPin className="h-5 w-5 text-gray-400" />
         <span className="max-w-[140px] truncate">{activeName}</span>
-        <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+        <ChevronDown className="h-5 w-5 text-gray-400" />
       </button>
 
       {open && (
@@ -46,7 +46,7 @@ export function LocationSwitcher() {
                 )}
               >
                 All Locations
-                {!activeId && <Check className="h-3.5 w-3.5 text-gray-900 dark:text-gray-100" />}
+                {!activeId && <Check className="h-5 w-5 text-gray-900 dark:text-gray-100" />}
               </button>
               {locations.map(loc => (
                 <button
@@ -57,7 +57,7 @@ export function LocationSwitcher() {
                   )}
                 >
                   <span className="truncate">{loc.name}</span>
-                  {activeId === loc.id && <Check className="h-3.5 w-3.5 shrink-0 text-gray-900 dark:text-gray-100" />}
+                  {activeId === loc.id && <Check className="h-5 w-5 shrink-0 text-gray-900 dark:text-gray-100" />}
                 </button>
               ))}
             </div>

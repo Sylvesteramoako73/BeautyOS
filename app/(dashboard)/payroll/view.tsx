@@ -61,7 +61,7 @@ export function PayrollView() {
         </div>
         {loaded && (
           <button onClick={() => exportCSV(filtered, startDate, endDate)} className="btn-secondary">
-            <Download className="h-4 w-4" /> Export CSV
+            <Download className="h-5 w-5" /> Export CSV
           </button>
         )}
       </div>
@@ -78,7 +78,7 @@ export function PayrollView() {
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="form-input" />
           </div>
           <button onClick={handleGenerate} disabled={loading} className="btn-primary">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
             Generate Report
           </button>
         </div>
@@ -100,7 +100,7 @@ export function PayrollView() {
           </div>
 
           <div className="relative w-56">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input type="text" placeholder="Filter staff…" value={search}
               onChange={e => setSearch(e.target.value)} className="form-input pl-9" />
           </div>
@@ -119,7 +119,7 @@ export function PayrollView() {
                   <tr key={e.id}>
                     <td>
                       <div className="flex items-center gap-2.5">
-                        <div className="h-7 w-7 rounded-full bg-gray-200 text-gray-600 text-xs font-semibold flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-gray-200 text-gray-600 text-xs font-semibold flex items-center justify-center">
                           {e.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                         </div>
                         <span className="font-medium">{e.name}</span>

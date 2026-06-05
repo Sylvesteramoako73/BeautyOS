@@ -80,7 +80,7 @@ export function PushNotificationButton() {
       title="Disable push notifications"
       className="relative h-9 w-9 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
     >
-      <Bell className="h-4 w-4 text-blue-600 dark:text-blue-400 fill-blue-600 dark:fill-blue-400" />
+      <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400 fill-blue-600 dark:fill-blue-400" />
     </button>
   )
 
@@ -91,7 +91,7 @@ export function PushNotificationButton() {
       title={status === 'denied' ? 'Notifications blocked — allow in browser settings' : 'Enable push notifications'}
       className="relative h-9 w-9 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer disabled:opacity-40"
     >
-      <BellOff className="h-4 w-4 text-gray-400" />
+      <BellOff className="h-5 w-5 text-gray-400" />
     </button>
   )
 }

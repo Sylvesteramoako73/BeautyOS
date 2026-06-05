@@ -345,7 +345,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
         </div>
         {canEdit && (
           <button onClick={openNew} className="btn-primary">
-            <Plus className="h-4 w-4" /> Add Apprentice
+            <Plus className="h-5 w-5" /> Add Apprentice
           </button>
         )}
       </div>
@@ -359,7 +359,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
         ].map(s => (
           <div key={s.label} className="stat-box flex items-start gap-3">
             <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-md shrink-0">
-              <s.icon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+              <s.icon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
             </div>
             <div>
               <p className="text-xs text-gray-500">{s.label}{s.note && <span className="text-gray-400"> ({s.note})</span>}</p>
@@ -388,7 +388,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
           ))}
         </div>
         <div className="relative flex-1 min-w-[200px] max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search name, mentor, skills…"
@@ -438,26 +438,26 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                     </div>
                     <div className="flex gap-1 shrink-0">
                       {a.status === 'graduated' && (
-                        <button onClick={() => handleCertificate(a)} className="btn-ghost h-7 w-7 p-0 justify-center" title="Download certificate">
-                          <Download className="h-3.5 w-3.5" />
+                        <button onClick={() => handleCertificate(a)} className="btn-ghost h-8 w-8 p-0 justify-center" title="Download certificate">
+                          <Download className="h-5 w-5" />
                         </button>
                       )}
                       {canEdit && (
-                        <button onClick={() => openEdit(a)} className="btn-ghost h-7 w-7 p-0 justify-center" title="Edit">
-                          <Edit2 className="h-3.5 w-3.5" />
+                        <button onClick={() => openEdit(a)} className="btn-ghost h-8 w-8 p-0 justify-center" title="Edit">
+                          <Edit2 className="h-5 w-5" />
                         </button>
                       )}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <Users className="h-3.5 w-3.5 shrink-0" />
+                    <Users className="h-5 w-5 shrink-0" />
                     <span className="truncate">{a.mentorName ?? <span className="italic text-gray-400">No mentor</span>}</span>
                   </div>
 
                   <div className="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <Calendar className="h-3.5 w-3.5 shrink-0" />
+                      <Calendar className="h-5 w-5 shrink-0" />
                       <span>{elapsed(a.startDate)} in program</span>
                       {a.programDurationMonths && <span className="text-gray-400">/ {a.programDurationMonths}-month program</span>}
                     </div>
@@ -489,7 +489,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                     className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors cursor-pointer px-1.5 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
                     title="Progress notes"
                   >
-                    <BookOpen className="h-3.5 w-3.5" />
+                    <BookOpen className="h-5 w-5" />
                     <span>{notes.length}</span>
                     {avgRating > 0 && (
                       <span className="flex">
@@ -504,7 +504,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                       className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors cursor-pointer px-1.5 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
                       title="Skill sign-offs"
                     >
-                      <CheckCircle className="h-3.5 w-3.5" />
+                      <CheckCircle className="h-5 w-5" />
                       <span>{signedOff}/{skillList.length}</span>
                     </button>
                   )}
@@ -514,7 +514,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                     className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors cursor-pointer px-1.5 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
                     title="Tasks"
                   >
-                    <ListTodo className="h-3.5 w-3.5" />
+                    <ListTodo className="h-5 w-5" />
                     <span>Tasks</span>
                   </button>
 
@@ -523,7 +523,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                     className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors cursor-pointer px-1.5 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
                     title="Attendance"
                   >
-                    <CalendarCheck className="h-3.5 w-3.5" />
+                    <CalendarCheck className="h-5 w-5" />
                     <span>Attend</span>
                   </button>
 
@@ -543,7 +543,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">{editItem ? 'Edit Apprentice' : 'New Apprentice'}</h2>
-              <button onClick={closeForm} className="btn-ghost h-7 w-7 p-0 justify-center"><X className="h-4 w-4" /></button>
+              <button onClick={closeForm} className="btn-ghost h-8 w-8 p-0 justify-center"><X className="h-5 w-5" /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
               <div className="grid grid-cols-2 gap-4">
@@ -612,7 +612,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={closeForm} className="btn-secondary">Cancel</button>
                 <button type="submit" disabled={saving} className="btn-primary">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
                   {editItem ? 'Save Changes' : 'Add Apprentice'}
                 </button>
               </div>
@@ -630,7 +630,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                 <h2 className="font-semibold text-gray-900 dark:text-gray-100">Progress Notes</h2>
                 <p className="text-xs text-gray-500 mt-0.5">{progressFor.name}</p>
               </div>
-              <button onClick={() => setProgressFor(null)} className="btn-ghost h-7 w-7 p-0 justify-center"><X className="h-4 w-4" /></button>
+              <button onClick={() => setProgressFor(null)} className="btn-ghost h-8 w-8 p-0 justify-center"><X className="h-5 w-5" /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {(progressFor.progressNotes ?? []).length === 0
@@ -640,7 +640,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs text-gray-500">{n.date} · {n.addedBy}</span>
                       <div className="flex shrink-0">
-                        {[1,2,3,4,5].map(i => <Star key={i} className={cn('h-3 w-3', i <= n.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-200 dark:text-gray-700')} />)}
+                        {[1,2,3,4,5].map(i => <Star key={i} className={cn('h-5 w-5', i <= n.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-200 dark:text-gray-700')} />)}
                       </div>
                     </div>
                     <p className="text-sm text-gray-700 dark:text-gray-300">{n.note}</p>
@@ -659,7 +659,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                     <StarRating value={noteRating} onChange={setNoteRating} />
                   </div>
                   <button type="submit" disabled={savingNote || !noteText.trim()} className="btn-primary">
-                    {savingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                    {savingNote ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
                     Add Note
                   </button>
                 </div>
@@ -680,9 +680,9 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
               </div>
               <div className="flex gap-2">
                 <button onClick={() => setShowTaskForm(v => !v)} className="btn-secondary h-8 px-3 text-xs">
-                  <Plus className="h-3.5 w-3.5" /> Assign Task
+                  <Plus className="h-5 w-5" /> Assign Task
                 </button>
-                <button onClick={() => setTaskFor(null)} className="btn-ghost h-7 w-7 p-0 justify-center"><X className="h-4 w-4" /></button>
+                <button onClick={() => setTaskFor(null)} className="btn-ghost h-8 w-8 p-0 justify-center"><X className="h-5 w-5" /></button>
               </div>
             </div>
 
@@ -713,7 +713,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                 <div className="flex justify-end gap-2">
                   <button type="button" onClick={() => setShowTaskForm(false)} className="btn-secondary">Cancel</button>
                   <button type="submit" disabled={savingTask} className="btn-primary">
-                    {savingTask ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    {savingTask ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
                     Assign
                   </button>
                 </div>
@@ -744,7 +744,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                         </div>
                       </div>
                       <button onClick={() => handleDeleteTask(t.id)} className="shrink-0 p-1 text-gray-300 hover:text-red-500 transition-colors cursor-pointer">
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-5 w-5" />
                       </button>
                     </div>
                   ))}
@@ -762,7 +762,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                 <h2 className="font-semibold text-gray-900 dark:text-gray-100">Skill Sign-Offs</h2>
                 <p className="text-xs text-gray-500 mt-0.5">{skillFor.name}</p>
               </div>
-              <button onClick={() => setSkillFor(null)} className="btn-ghost h-7 w-7 p-0 justify-center"><X className="h-4 w-4" /></button>
+              <button onClick={() => setSkillFor(null)} className="btn-ghost h-8 w-8 p-0 justify-center"><X className="h-5 w-5" /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-3">
               {getSkillList(skillFor).length === 0
@@ -813,7 +813,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                 <h2 className="font-semibold text-gray-900 dark:text-gray-100">Attendance</h2>
                 <p className="text-xs text-gray-500 mt-0.5">{attendFor.name}</p>
               </div>
-              <button onClick={() => setAttendFor(null)} className="btn-ghost h-7 w-7 p-0 justify-center"><X className="h-4 w-4" /></button>
+              <button onClick={() => setAttendFor(null)} className="btn-ghost h-8 w-8 p-0 justify-center"><X className="h-5 w-5" /></button>
             </div>
 
             {/* Log form */}
@@ -834,7 +834,7 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                 </div>
                 <div className="flex items-end">
                   <button type="submit" disabled={savingAttend} className="btn-primary w-full justify-center">
-                    {savingAttend ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    {savingAttend ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
                     Save
                   </button>
                 </div>

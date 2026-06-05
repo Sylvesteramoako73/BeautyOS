@@ -206,10 +206,10 @@ export function AutomationsView({ automations: initial }: { automations: Automat
             }}
             className="btn-secondary"
           >
-            <RefreshCw className="h-4 w-4" /> Run All Now
+            <RefreshCw className="h-5 w-5" /> Run All Now
           </button>
           <button onClick={() => setShowNew(true)} className="btn-primary">
-            <Plus className="h-4 w-4" /> New Automation
+            <Plus className="h-5 w-5" /> New Automation
           </button>
         </div>
       </div>
@@ -217,7 +217,7 @@ export function AutomationsView({ automations: initial }: { automations: Automat
       {runResult && (
         <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 text-sm text-blue-800">
           <span>{runResult}</span>
-          <button onClick={() => setRunResult(null)} className="text-blue-500 hover:text-blue-700 cursor-pointer"><X className="h-4 w-4" /></button>
+          <button onClick={() => setRunResult(null)} className="text-blue-500 hover:text-blue-700 cursor-pointer"><X className="h-5 w-5" /></button>
         </div>
       )}
 
@@ -238,7 +238,7 @@ export function AutomationsView({ automations: initial }: { automations: Automat
 
       {/* Info banner */}
       <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
-        <Zap className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+        <Zap className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
         <div className="text-xs text-blue-800">
           <strong>How automations work:</strong> The scheduler runs every 15 minutes via <code className="bg-blue-100 px-1 rounded">GET /api/cron</code> (requires <code className="bg-blue-100 px-1 rounded">Authorization: Bearer {'{CRON_SECRET}'}</code>).
           When credentials (Twilio/SMTP) are not configured, messages are logged to the server console instead of being sent.
@@ -271,12 +271,12 @@ export function AutomationsView({ automations: initial }: { automations: Automat
                   className={cn('relative h-5 w-9 rounded-full transition-colors cursor-pointer shrink-0 focus:outline-none', auto.isActive ? 'bg-gray-900' : 'bg-gray-200')}
                   title={auto.isActive ? 'Disable' : 'Enable'}
                 >
-                  <span className={cn('absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform', auto.isActive && 'translate-x-4')} />
+                  <span className={cn('absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform', auto.isActive && 'translate-x-4')} />
                 </button>
 
                 {/* Icon */}
                 <div className={cn('h-8 w-8 rounded-md flex items-center justify-center shrink-0', auto.isActive ? 'bg-gray-900 dark:bg-gray-100' : 'bg-gray-100 dark:bg-gray-800')}>
-                  <TriggerIcon className={cn('h-4 w-4', auto.isActive ? 'text-white' : 'text-gray-400')} />
+                  <TriggerIcon className={cn('h-5 w-5', auto.isActive ? 'text-white' : 'text-gray-400')} />
                 </div>
 
                 {/* Info */}
@@ -292,11 +292,11 @@ export function AutomationsView({ automations: initial }: { automations: Automat
                 {/* Meta */}
                 <div className="hidden lg:flex flex-col items-end gap-1 shrink-0 w-48">
                   <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <Clock className="h-3 w-3" />
+                    <Clock className="h-5 w-5" />
                     {TRIGGER_LABELS[auto.trigger] ?? auto.trigger}
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                    {auto.channel === 'email' ? <Mail className="h-3 w-3" /> : <MessageSquare className="h-3 w-3" />}
+                    {auto.channel === 'email' ? <Mail className="h-5 w-5" /> : <MessageSquare className="h-5 w-5" />}
                     {CHANNEL_LABELS[auto.channel] ?? auto.channel}
                   </div>
                 </div>
@@ -316,11 +316,11 @@ export function AutomationsView({ automations: initial }: { automations: Automat
                     title="Run now"
                   >
                     {runningId === auto.id
-                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      : <Send className="h-3.5 w-3.5" />}
+                      ? <Loader2 className="h-5 w-5 animate-spin" />
+                      : <Send className="h-5 w-5" />}
                   </button>
-                  <button onClick={() => setExpanded(isExpanded ? null : auto.id)} className="btn-ghost h-7 w-7 p-0 justify-center">
-                    {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                  <button onClick={() => setExpanded(isExpanded ? null : auto.id)} className="btn-ghost h-8 w-8 p-0 justify-center">
+                    {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
@@ -363,7 +363,7 @@ export function AutomationsView({ automations: initial }: { automations: Automat
                         />
                         <div className="flex gap-2">
                           <button type="submit" className="btn-primary h-7 px-3 text-xs">
-                            {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                            {pending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
                             Save
                           </button>
                           <button type="button" onClick={() => setEditTemplate(null)} className="btn-secondary h-7 px-3 text-xs">Cancel</button>
@@ -383,13 +383,13 @@ export function AutomationsView({ automations: initial }: { automations: Automat
                       onClick={() => setEditTemplate({ id: auto.id, text: auto.messageTemplate })}
                       className="btn-secondary"
                     >
-                      <Edit2 className="h-3.5 w-3.5" /> Edit Template
+                      <Edit2 className="h-5 w-5" /> Edit Template
                     </button>
                     <button onClick={() => handleToggle(auto.id)} className={cn('btn-secondary', auto.isActive && 'text-yellow-700 hover:bg-yellow-50')}>
-                      {auto.isActive ? <><Pause className="h-3.5 w-3.5" /> Disable</> : <><Play className="h-3.5 w-3.5" /> Enable</>}
+                      {auto.isActive ? <><Pause className="h-5 w-5" /> Disable</> : <><Play className="h-5 w-5" /> Enable</>}
                     </button>
                     <button onClick={() => handleDelete(auto.id)} className="btn-ghost text-red-600 hover:bg-red-50 ml-auto">
-                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                      <Trash2 className="h-5 w-5" /> Delete
                     </button>
                   </div>
                 </div>
@@ -409,7 +409,7 @@ export function AutomationsView({ automations: initial }: { automations: Automat
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-900">
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">New Automation</h2>
-              <button onClick={() => setShowNew(false)} className="btn-ghost h-7 w-7 p-0 justify-center"><X className="h-4 w-4" /></button>
+              <button onClick={() => setShowNew(false)} className="btn-ghost h-8 w-8 p-0 justify-center"><X className="h-5 w-5" /></button>
             </div>
             <form onSubmit={handleCreate} className="p-6 space-y-4">
               <div>
@@ -472,7 +472,7 @@ export function AutomationsView({ automations: initial }: { automations: Automat
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowNew(false)} className="btn-secondary">Cancel</button>
                 <button type="submit" disabled={pending} className="btn-primary">
-                  {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  {pending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
                   Create Automation
                 </button>
               </div>

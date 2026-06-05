@@ -316,14 +316,14 @@ export function AppointmentsView({
           </p>
         </div>
         <div className="flex gap-2">
-          <button onClick={exportCSV} className="btn-secondary"><Download className="h-4 w-4" /> Export</button>
-          <button onClick={() => setShowNew(true)} className="btn-primary"><Plus className="h-4 w-4" /> New Appointment</button>
+          <button onClick={exportCSV} className="btn-secondary"><Download className="h-5 w-5" /> Export</button>
+          <button onClick={() => setShowNew(true)} className="btn-primary"><Plus className="h-5 w-5" /> New Appointment</button>
         </div>
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search client or service..."
@@ -388,7 +388,7 @@ export function AppointmentsView({
                   <td className="text-right font-medium">{formatCurrency(apt.totalPrice)}</td>
                   <td>
                     {updating === apt.id
-                      ? <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-400" />
+                      ? <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
                       : apt.status === 'confirmed' && (
                         <div className="flex gap-1">
                           <button onClick={() => handleStatusChange(apt.id, 'in-progress')} className="btn-ghost text-xs h-7 px-2">Start</button>
@@ -399,8 +399,8 @@ export function AppointmentsView({
                       <button onClick={() => openPaymentModal(apt)} className="btn-ghost text-xs h-7 px-2 text-green-600">Complete</button>
                     )}
                     {apt.status === 'completed' && !updating && (
-                      <button onClick={() => handleDownloadReceipt(apt)} className="btn-ghost h-7 w-7 p-0 justify-center" title="Download receipt">
-                        <FileDown className="h-3.5 w-3.5" />
+                      <button onClick={() => handleDownloadReceipt(apt)} className="btn-ghost h-8 w-8 p-0 justify-center" title="Download receipt">
+                        <FileDown className="h-5 w-5" />
                       </button>
                     )}
                   </td>
@@ -415,15 +415,15 @@ export function AppointmentsView({
       ) : (
         <div className="card overflow-hidden">
           <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-200">
-            <button onClick={() => setWeekOffset(w => w - 1)} className="btn-ghost h-7 w-7 p-0 justify-center">
-              <ChevronLeft className="h-4 w-4" />
+            <button onClick={() => setWeekOffset(w => w - 1)} className="btn-ghost h-8 w-8 p-0 justify-center">
+              <ChevronLeft className="h-5 w-5" />
             </button>
             <span className="text-sm font-medium">
               {weekDates[0].toLocaleDateString('en-GH', { month: 'short', day: 'numeric' })} –{' '}
               {weekDates[6].toLocaleDateString('en-GH', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
-            <button onClick={() => setWeekOffset(w => w + 1)} className="btn-ghost h-7 w-7 p-0 justify-center">
-              <ChevronRight className="h-4 w-4" />
+            <button onClick={() => setWeekOffset(w => w + 1)} className="btn-ghost h-8 w-8 p-0 justify-center">
+              <ChevronRight className="h-5 w-5" />
             </button>
             {weekOffset !== 0 && (
               <button onClick={() => setWeekOffset(0)} className="text-xs text-gray-500 hover:text-gray-900 cursor-pointer">
@@ -479,8 +479,8 @@ export function AppointmentsView({
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-900">
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">New Appointment</h2>
-              <button onClick={() => { setShowNew(false); setForm(EMPTY_FORM) }} className="btn-ghost h-7 w-7 p-0 justify-center">
-                <X className="h-4 w-4" />
+              <button onClick={() => { setShowNew(false); setForm(EMPTY_FORM) }} className="btn-ghost h-8 w-8 p-0 justify-center">
+                <X className="h-5 w-5" />
               </button>
             </div>
 
@@ -573,7 +573,7 @@ export function AppointmentsView({
                           <span className={cn('text-sm font-medium', selected ? 'text-white' : 'text-gray-700')}>
                             {formatCurrency(svc.price)}
                           </span>
-                          {selected && <Check className="h-4 w-4 text-white shrink-0" />}
+                          {selected && <Check className="h-5 w-5 text-white shrink-0" />}
                         </div>
                       </div>
                     )
@@ -598,7 +598,7 @@ export function AppointmentsView({
                     type="checkbox"
                     checked={form.recurring}
                     onChange={e => setForm(f => ({ ...f, recurring: e.target.checked }))}
-                    className="h-4 w-4 rounded border-gray-300 text-gray-900 cursor-pointer"
+                    className="h-5 w-5 rounded border-gray-300 text-gray-900 cursor-pointer"
                   />
                   <span className="text-sm font-medium text-gray-900">Recurring appointment</span>
                 </label>
@@ -652,7 +652,7 @@ export function AppointmentsView({
                   disabled={submitting || form.serviceIds.length === 0}
                   className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
                   {form.recurring ? `Book ${form.recurCount} Appointments` : 'Book Appointment'}
                 </button>
               </div>
@@ -670,8 +670,8 @@ export function AppointmentsView({
                 <h2 className="font-semibold text-gray-900 dark:text-gray-100">Record Payment</h2>
                 <p className="text-xs text-gray-500 mt-0.5">{paymentModal.client?.name ?? paymentModal.clientName}</p>
               </div>
-              <button onClick={() => setPaymentModal(null)} className="btn-ghost h-7 w-7 p-0 justify-center">
-                <X className="h-4 w-4" />
+              <button onClick={() => setPaymentModal(null)} className="btn-ghost h-8 w-8 p-0 justify-center">
+                <X className="h-5 w-5" />
               </button>
             </div>
 
@@ -772,7 +772,7 @@ export function AppointmentsView({
                   disabled={recordingPayment}
                   className="btn-primary w-full justify-center"
                 >
-                  {recordingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  {recordingPayment ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
                   Record Payment &amp; Download Receipt
                 </button>
                 <button

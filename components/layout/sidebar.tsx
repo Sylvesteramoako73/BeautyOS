@@ -72,7 +72,7 @@ export function Sidebar({ user }: SidebarProps) {
             : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'
         )}
       >
-        <Icon className="h-4 w-4 shrink-0" />
+        <Icon className="h-5 w-5 shrink-0" />
         {item.label}
       </Link>
     )
@@ -93,7 +93,7 @@ export function Sidebar({ user }: SidebarProps) {
           />
         </Link>
         <button onClick={() => setOpen(false)} className="lg:hidden p-1 text-gray-400 hover:text-gray-600 cursor-pointer">
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </button>
       </div>
 
@@ -105,7 +105,7 @@ export function Sidebar({ user }: SidebarProps) {
       {/* User + Logout */}
       <div className="border-t border-gray-200 dark:border-gray-700 p-3">
         <div className="flex items-center gap-3 px-2 py-2 rounded-md">
-          <div className="h-7 w-7 rounded-full bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-semibold flex items-center justify-center shrink-0">
+          <div className="h-8 w-8 rounded-full bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-semibold flex items-center justify-center shrink-0">
             {user ? getInitials(user.name) : '…'}
           </div>
           <div className="flex-1 min-w-0">
@@ -117,7 +117,7 @@ export function Sidebar({ user }: SidebarProps) {
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-gray-800 transition-colors cursor-pointer"
           >
-            {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
           <button
             onClick={handleLogout}
@@ -125,7 +125,7 @@ export function Sidebar({ user }: SidebarProps) {
             title="Sign out"
             className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-gray-800 transition-colors cursor-pointer disabled:opacity-50"
           >
-            <LogOut className="h-3.5 w-3.5" />
+            <LogOut className="h-5 w-5" />
           </button>
         </div>
       </div>
@@ -138,7 +138,7 @@ export function Sidebar({ user }: SidebarProps) {
         onClick={() => setOpen(true)}
         className="lg:hidden fixed top-4 left-4 z-40 p-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm"
       >
-        <Menu className="h-4 w-4 text-gray-600" />
+        <Menu className="h-5 w-5 text-gray-600" />
       </button>
 
       {open && <div className="fixed inset-0 bg-black/20 z-40 lg:hidden" onClick={() => setOpen(false)} />}
