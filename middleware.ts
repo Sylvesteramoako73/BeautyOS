@@ -19,16 +19,18 @@ export function middleware(req: NextRequest) {
   // API routes — let through (they do their own auth)
   if (pathname.startsWith('/api')) return NextResponse.next()
 
-  // Subdomain detection — e.g. hairport.beautyos.app → slug = "hairport"
-  const parts = hostname.split('.')
-  const isSubdomain = parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'app'
-  if (isSubdomain) {
-    const slug = parts[0]
+  // Subdomain detection — only on our production domain, never on vercel.app
+  // e.g. hairport.beautyos.app → slug = "hairport"
+  const isProductionSubdomain =
+    hostname.endsWith('.beautyos.app') &&
+    hostname !== 'beautyos.app' &&
+    hostname !== 'www.beautyos.app'
+  if (isProductionSubdomain) {
+    const slug = hostname.split('.')[0]
     const res  = NextResponse.next()
     res.headers.set('x-tenant-slug', slug)
-    // Still enforce auth on dashboard routes
     if (!session && !isPublic(pathname)) {
-      return NextResponse.redirect(new URL(`/login`, req.url))
+      return NextResponse.redirect(new URL('/login', req.url))
     }
     return res
   }
