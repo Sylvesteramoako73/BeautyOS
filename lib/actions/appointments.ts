@@ -36,8 +36,27 @@ export async function getAppointments(filters?: {
     results = results.filter(a => a.status === filters.status)
   }
 
-  // Most recently booked at the top so new appointments are immediately visible
-  return results.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  // Active appointments first (in-progress → confirmed → pending → no-show),
+  // completed/cancelled sink to the bottom sorted by date descending.
+  const STATUS_RANK: Record<string, number> = {
+    'in-progress': 0,
+    confirmed:     1,
+    pending:       2,
+    'no-show':     3,
+    completed:     4,
+    cancelled:     5,
+  }
+  return results.sort((a, b) => {
+    const ra = STATUS_RANK[a.status] ?? 3
+    const rb = STATUS_RANK[b.status] ?? 3
+    if (ra !== rb) return ra - rb
+    // Within active group: soonest date/time first
+    // Within completed/cancelled group: most recent first
+    const asc = ra < 4
+    return asc
+      ? a.date !== b.date ? a.date.localeCompare(b.date) : a.startTime.localeCompare(b.startTime)
+      : b.date !== a.date ? b.date.localeCompare(a.date) : b.startTime.localeCompare(a.startTime)
+  })
 }
 
 export async function getTodayAppointments(locationId?: string | null): Promise<Appointment[]> {
