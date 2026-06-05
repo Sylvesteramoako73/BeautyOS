@@ -26,12 +26,10 @@ export async function getAppointments(filters?: {
   const tenantId = await getTenantId()
   if (!tenantId) return []
 
-  let q: FirebaseFirestore.Query = apts().where('tenantId', '==', tenantId)
-  if (filters?.date) q = q.where('date', '==', filters.date)
-
-  const snap = await q.get()
+  const snap = await apts().where('tenantId', '==', tenantId).get()
   let results = snap.docs.map(mapAppt)
 
+  if (filters?.date)       results = results.filter(a => a.date       === filters.date)
   if (filters?.staffId)    results = results.filter(a => a.staffId    === filters.staffId)
   if (filters?.locationId) results = results.filter(a => a.locationId === filters.locationId)
   if (filters?.status && filters.status !== 'all') {
@@ -249,20 +247,19 @@ export async function getDashboardStats(locationId?: string | null) {
 
   const base = apts().where('tenantId', '==', tenantId)
 
-  const [todaySnap, monthSnap, lastMonthSnap, clientsSnap, staffSnap] = await Promise.all([
-    base.where('date', '==', today).get(),
-    base.where('date', '>=', monthStart).get(),
-    base.where('date', '>=', lastMonthStart).where('date', '<', lastMonthEnd).get(),
-    adminDb.collection('clients').where('tenantId', '==', tenantId).where('isActive', '==', true).count().get(),
-    adminDb.collection('staff').where('tenantId', '==', tenantId).where('isActive', '==', true).get(),
+  const [apptSnap, clientsSnap, staffSnap] = await Promise.all([
+    base.get(),
+    adminDb.collection('clients').where('tenantId', '==', tenantId).get(),
+    adminDb.collection('staff').where('tenantId', '==', tenantId).get(),
   ])
 
   const loc = (a: any) => !locationId || a.locationId === locationId
 
-  const todayApts = todaySnap.docs.map(d => d.data()).filter(loc)
-  const monthApts = monthSnap.docs.map(d => d.data()).filter(loc)
-  const lastApts  = lastMonthSnap.docs.map(d => d.data()).filter(loc)
-  const staff     = staffSnap.docs.map(d => d.data()).filter((s: any) => !locationId || s.locationId === locationId)
+  const allApts   = apptSnap.docs.map(d => d.data())
+  const todayApts = allApts.filter(a => a.date === today).filter(loc)
+  const monthApts = allApts.filter(a => a.date >= monthStart).filter(loc)
+  const lastApts  = allApts.filter(a => a.date >= lastMonthStart && a.date < lastMonthEnd).filter(loc)
+  const staff     = staffSnap.docs.map(d => d.data()).filter((s: any) => s.isActive && (!locationId || s.locationId === locationId))
 
   const todayRevenue   = todayApts.filter((a: any) => a.paymentStatus === 'paid').reduce((s: number, a: any) => s + a.totalPrice, 0)
   const monthRevenue   = monthApts.filter((a: any) => a.paymentStatus === 'paid').reduce((s: number, a: any) => s + a.totalPrice, 0)
@@ -277,7 +274,7 @@ export async function getDashboardStats(locationId?: string | null) {
     upcomingToday:  todayApts.filter((a: any) => a.status === 'confirmed').length,
     monthlyRevenue: monthRevenue,
     revenueGrowth,
-    totalClients:   clientsSnap.data().count,
+    totalClients:   clientsSnap.docs.filter(d => d.data().isActive).length,
     avgTransaction,
     staffCount:     staff.length,
     availableStaff: staff.filter((s: any) => s.isAvailable).length,

@@ -22,10 +22,9 @@ export type Expense = {
 export async function getExpenses(filters?: { month?: string; locationId?: string }): Promise<Expense[]> {
   const tenantId = await getTenantId()
   if (!tenantId) return []
-  let q: FirebaseFirestore.Query = adminDb.collection('expenses').where('tenantId', '==', tenantId)
-  if (filters?.month) q = q.where('date', '>=', `${filters.month}-01`).where('date', '<=', `${filters.month}-31`)
-  const snap = await q.get()
+  const snap = await adminDb.collection('expenses').where('tenantId', '==', tenantId).get()
   let results = snap.docs.map(d => docData(d) as Expense)
+  if (filters?.month)      results = results.filter(e => e.date >= `${filters.month}-01` && e.date <= `${filters.month}-31`)
   if (filters?.locationId) results = results.filter(e => e.locationId === filters.locationId)
   return results.sort((a, b) => b.date.localeCompare(a.date))
 }
@@ -59,10 +58,8 @@ export async function getExpenseSummary(monthStart: string, monthEnd: string) {
   if (!tenantId) return { total: 0, byCategory: {}, count: 0 }
   const snap = await adminDb.collection('expenses')
     .where('tenantId', '==', tenantId)
-    .where('date', '>=', monthStart)
-    .where('date', '<=', monthEnd)
     .get()
-  const expenses = snap.docs.map(d => d.data() as Expense)
+  const expenses = snap.docs.map(d => d.data() as Expense).filter(e => e.date >= monthStart && e.date <= monthEnd)
   const total = expenses.reduce((s, e) => s + e.amount, 0)
   const byCategory = expenses.reduce((acc, e) => {
     acc[e.category] = (acc[e.category] ?? 0) + e.amount

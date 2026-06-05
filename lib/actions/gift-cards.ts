@@ -44,22 +44,23 @@ export async function getGiftCards(): Promise<GiftCard[]> {
   if (!tenantId) return []
   const snap = await adminDb.collection('giftCards')
     .where('tenantId', '==', tenantId)
-    .where('isActive', '==', true)
     .get()
   return snap.docs
     .map(d => docData(d) as GiftCard)
+    .filter(gc => gc.isActive)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 
 export async function getGiftCardByCode(code: string): Promise<GiftCard | null> {
-  const tenantId = await getTenantId()
+  const tenantId  = await getTenantId()
   if (!tenantId) return null
+  const normalized = code.toUpperCase().trim()
   const snap = await adminDb.collection('giftCards')
     .where('tenantId', '==', tenantId)
-    .where('code', '==', code.toUpperCase().trim())
     .get()
-  if (snap.empty) return null
-  return docData(snap.docs[0]) as GiftCard
+  const doc = snap.docs.find(d => d.data().code === normalized)
+  if (!doc) return null
+  return docData(doc) as GiftCard
 }
 
 export async function issueGiftCard(data: {
@@ -92,13 +93,12 @@ export async function redeemGiftCard(code: string, amount: number, appointmentId
 }> {
   const tenantId = await getTenantId()
   if (!tenantId) return { success: false, newBalance: 0, error: 'Not authenticated' }
+  const normalized = code.toUpperCase().trim()
   const snap = await adminDb.collection('giftCards')
     .where('tenantId', '==', tenantId)
-    .where('code', '==', code.toUpperCase().trim())
     .get()
-  if (snap.empty) return { success: false, newBalance: 0, error: 'Gift card not found' }
-
-  const doc  = snap.docs[0]
+  const doc = snap.docs.find(d => d.data().code === normalized)
+  if (!doc) return { success: false, newBalance: 0, error: 'Gift card not found' }
   const card = docData(doc) as GiftCard
 
   if (!card.isActive)         return { success: false, newBalance: card.balance, error: 'Gift card is inactive' }

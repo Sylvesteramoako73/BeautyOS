@@ -27,10 +27,11 @@ export async function getNotifications(limit = 20): Promise<Notification[]> {
   if (!tenantId) return []
   const snap = await adminDb.collection('notifications')
     .where('tenantId', '==', tenantId)
-    .orderBy('createdAt', 'desc')
-    .limit(limit)
     .get()
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Notification))
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() } as Notification))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, limit)
 }
 
 export async function markAllRead() {
@@ -38,11 +39,11 @@ export async function markAllRead() {
   if (!tenantId) return
   const snap  = await adminDb.collection('notifications')
     .where('tenantId', '==', tenantId)
-    .where('read', '==', false)
     .get()
-  const batch = adminDb.batch()
-  snap.docs.forEach(d => batch.update(d.ref, { read: true }))
-  if (snap.size > 0) await batch.commit()
+  const unread = snap.docs.filter(d => !d.data().read)
+  const batch  = adminDb.batch()
+  unread.forEach(d => batch.update(d.ref, { read: true }))
+  if (unread.length > 0) await batch.commit()
 }
 
 export async function getUnreadCount(): Promise<number> {
@@ -50,8 +51,6 @@ export async function getUnreadCount(): Promise<number> {
   if (!tenantId) return 0
   const snap = await adminDb.collection('notifications')
     .where('tenantId', '==', tenantId)
-    .where('read', '==', false)
-    .count()
     .get()
-  return snap.data().count
+  return snap.docs.filter(d => !d.data().read).length
 }

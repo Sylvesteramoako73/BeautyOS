@@ -10,9 +10,8 @@ export async function getClients(): Promise<Client[]> {
   if (!tenantId) return []
   const snap = await adminDb.collection('clients')
     .where('tenantId', '==', tenantId)
-    .where('isActive', '==', true)
     .get()
-  return snap.docs.map(d => docData(d) as Client).sort((a, b) => a.name.localeCompare(b.name))
+  return snap.docs.map(d => docData(d) as Client).filter(c => c.isActive).sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function getClient(id: string): Promise<Client | null> {
@@ -30,13 +29,13 @@ export async function getClientWithHistory(id: string) {
     adminDb.collection('clients').doc(id).get(),
     adminDb.collection('appointments')
       .where('tenantId', '==', tenantId)
-      .where('clientId', '==', id)
       .get(),
   ])
   if (!clientDoc.exists) return null
   const client       = docData(clientDoc) as Client
   const appointments = apptSnap.docs
     .map(d => ({ id: d.id, ...d.data() }))
+    .filter((a: any) => a.clientId === id)
     .sort((a: any, b: any) => b.date.localeCompare(a.date))
   return { ...client, appointments }
 }

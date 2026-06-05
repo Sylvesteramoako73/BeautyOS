@@ -19,14 +19,12 @@ export async function getPayrollData(startDate: string, endDate: string): Promis
   if (!tenantId) return []
   const staff = await getStaff()
 
-  // Range on same field — no composite index needed
+  // Fetch by tenant then filter date range in memory — avoids composite index
   const snap = await adminDb.collection('appointments')
     .where('tenantId', '==', tenantId)
-    .where('date', '>=', startDate)
-    .where('date', '<=', endDate)
     .get()
 
-  const appointments = snap.docs.map(d => d.data())
+  const appointments = snap.docs.map(d => d.data()).filter(a => a.date >= startDate && a.date <= endDate)
 
   return staff.map(member => {
     const myApts    = appointments.filter(a => a.staffId === member.id && a.paymentStatus === 'paid')

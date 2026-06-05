@@ -9,9 +9,8 @@ export async function getAutomations(): Promise<Automation[]> {
   if (!tenantId) return []
   const snap = await adminDb.collection('automations')
     .where('tenantId', '==', tenantId)
-    .orderBy('createdAt')
     .get()
-  return snap.docs.map(d => docData(d) as Automation)
+  return snap.docs.map(d => docData(d) as Automation).sort((a, b) => a.createdAt.localeCompare(b.createdAt))
 }
 
 export async function getAutomationStats(): Promise<AutomationWithStats[]> {
@@ -20,12 +19,11 @@ export async function getAutomationStats(): Promise<AutomationWithStats[]> {
   const automations = await getAutomations()
   const monthStart  = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
 
-  // Fetch all logs for this month in one query (single where field)
+  // Fetch all logs for tenant then filter in memory — avoids compound where clauses
   const logsSnap = await adminDb.collection('automationLogs')
     .where('tenantId', '==', tenantId)
-    .where('createdAt', '>=', monthStart)
     .get()
-  const allLogs = logsSnap.docs.map(d => d.data())
+  const allLogs = logsSnap.docs.map(d => d.data()).filter(l => l.createdAt >= monthStart)
 
   return automations.map(a => {
     const logs   = allLogs.filter(l => l.automationId === a.id)

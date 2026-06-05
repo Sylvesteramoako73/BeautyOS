@@ -10,9 +10,8 @@ export async function getServices(): Promise<Service[]> {
   if (!tenantId) return []
   const snap = await adminDb.collection('services')
     .where('tenantId', '==', tenantId)
-    .where('isActive', '==', true)
     .get()
-  return snap.docs.map(d => docData(d) as Service).sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name))
+  return snap.docs.map(d => docData(d) as Service).filter(s => s.isActive).sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name))
 }
 
 export async function getServicesWithStats(): Promise<ServiceWithStats[]> {
@@ -26,11 +25,10 @@ export async function getServicesWithStats(): Promise<ServiceWithStats[]> {
     getServices(),
     adminDb.collection('appointments')
       .where('tenantId', '==', tenantId)
-      .where('date', '>=', monthStart)
       .get(),
   ])
 
-  const appointments = apptSnap.docs.map(d => d.data() as any)
+  const appointments = apptSnap.docs.map(d => d.data() as any).filter(a => a.date >= monthStart)
 
   return services.map(svc => {
     let bookingsThisMonth = 0

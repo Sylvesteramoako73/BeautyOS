@@ -9,10 +9,10 @@ export async function getAttendanceForApprentice(apprenticeId: string): Promise<
   if (!tenantId) return []
   const snap = await adminDb.collection('apprenticeAttendance')
     .where('tenantId', '==', tenantId)
-    .where('apprenticeId', '==', apprenticeId)
     .get()
   return snap.docs
     .map(d => docData(d) as AttendanceRecord)
+    .filter(r => r.apprenticeId === apprenticeId)
     .sort((a, b) => b.date.localeCompare(a.date))
 }
 
@@ -24,11 +24,11 @@ export async function logAttendance(data: {
   recordedBy: string
 }): Promise<AttendanceRecord> {
   const tenantId = await getTenantId()
-  const existing = await adminDb.collection('apprenticeAttendance')
+  const allSnap = await adminDb.collection('apprenticeAttendance')
     .where('tenantId', '==', tenantId ?? '')
-    .where('apprenticeId', '==', data.apprenticeId)
-    .where('date', '==', data.date)
     .get()
+  const existing = { docs: allSnap.docs.filter(d => d.data().apprenticeId === data.apprenticeId && d.data().date === data.date), empty: false as boolean }
+  existing.empty = existing.docs.length === 0
 
   const now = new Date().toISOString()
   const payload = {

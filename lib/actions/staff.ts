@@ -10,9 +10,8 @@ export async function getStaff(): Promise<Staff[]> {
   if (!tenantId) return []
   const snap = await adminDb.collection('staff')
     .where('tenantId', '==', tenantId)
-    .where('isActive', '==', true)
     .get()
-  return snap.docs.map(d => docData(d) as Staff).sort((a, b) => a.name.localeCompare(b.name))
+  return snap.docs.map(d => docData(d) as Staff).filter(s => s.isActive).sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function getStaffWithStats(): Promise<StaffWithStats[]> {
@@ -24,20 +23,14 @@ export async function getStaffWithStats(): Promise<StaffWithStats[]> {
 
   const staff = await getStaff()
 
-  // Fetch appointments in bulk by date — avoids compound where clauses
-  const [todaySnap, monthSnap] = await Promise.all([
-    adminDb.collection('appointments')
-      .where('tenantId', '==', tenantId)
-      .where('date', '==', today)
-      .get(),
-    adminDb.collection('appointments')
-      .where('tenantId', '==', tenantId)
-      .where('date', '>=', monthStart)
-      .get(),
-  ])
+  // Fetch all appointments for tenant then filter in memory — avoids compound where clauses
+  const apptSnap = await adminDb.collection('appointments')
+    .where('tenantId', '==', tenantId)
+    .get()
 
-  const todayApts = todaySnap.docs.map(d => d.data())
-  const monthApts = monthSnap.docs.map(d => d.data())
+  const allApts   = apptSnap.docs.map(d => d.data())
+  const todayApts = allApts.filter(a => a.date === today)
+  const monthApts = allApts.filter(a => a.date >= monthStart)
 
   return staff.map(member => {
     const myToday = todayApts.filter(a => a.staffId === member.id)
@@ -144,21 +137,17 @@ export async function getStaffAppointmentsForReport(staffId: string, startDate: 
   if (!tenantId) return []
   const snap = await adminDb.collection('appointments')
     .where('tenantId', '==', tenantId)
-    .where('staffId', '==', staffId)
-    .where('date', '>=', startDate)
-    .where('date', '<=', endDate)
     .get()
 
   return snap.docs
-    .map(d => {
-      const data = d.data()
-      return {
-        date:       data.date as string,
-        clientName: data.clientName as string,
-        services:   (data.services ?? []).map((s: any) => s.name).join(', ') as string,
-        totalPrice: data.totalPrice as number,
-        status:     data.status as string,
-      }
-    })
+    .map(d => d.data())
+    .filter(data => data.staffId === staffId && data.date >= startDate && data.date <= endDate)
+    .map(data => ({
+      date:       data.date as string,
+      clientName: data.clientName as string,
+      services:   (data.services ?? []).map((s: any) => s.name).join(', ') as string,
+      totalPrice: data.totalPrice as number,
+      status:     data.status as string,
+    }))
     .sort((a, b) => b.date.localeCompare(a.date))
 }

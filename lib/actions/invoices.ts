@@ -22,16 +22,11 @@ export type Invoice = {
 export async function getInvoices(filters?: { clientId?: string; status?: string }): Promise<Invoice[]> {
   const tenantId = await getTenantId()
   if (!tenantId) return []
-  let q: FirebaseFirestore.Query = adminDb.collection('invoices').where('tenantId', '==', tenantId)
-  if (filters?.clientId) q = q.where('clientId', '==', filters.clientId)
-  else if (filters?.status) q = q.where('status', '==', filters.status)
-
-  const snap = await q.get()
+  const snap = await adminDb.collection('invoices').where('tenantId', '==', tenantId).get()
   let invoices = snap.docs.map(d => docData(d) as Invoice)
 
-  if (filters?.status && filters.clientId) {
-    invoices = invoices.filter(i => i.status === filters.status)
-  }
+  if (filters?.clientId) invoices = invoices.filter(i => i.clientId === filters.clientId)
+  if (filters?.status)   invoices = invoices.filter(i => i.status   === filters.status)
 
   return invoices.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
@@ -41,12 +36,11 @@ export async function getInvoiceStats() {
   if (!tenantId) return { total: 0, totalRevenue: 0, thisMonth: 0, monthRevenue: 0 }
   const now        = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const snap       = await adminDb.collection('invoices')
+  const snap  = await adminDb.collection('invoices')
     .where('tenantId', '==', tenantId)
-    .where('status', '==', 'paid')
     .get()
 
-  const all       = snap.docs.map(d => d.data())
+  const all       = snap.docs.map(d => d.data()).filter(i => i.status === 'paid')
   const thisMonth = all.filter(i => i.createdAt >= monthStart)
 
   return {

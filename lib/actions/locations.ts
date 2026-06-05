@@ -18,9 +18,8 @@ export async function getLocations(): Promise<Location[]> {
   if (!tenantId) return []
   const snap = await adminDb.collection('locations')
     .where('tenantId', '==', tenantId)
-    .where('isActive', '==', true)
     .get()
-  return snap.docs.map(d => docData(d) as Location).sort((a, b) => a.name.localeCompare(b.name))
+  return snap.docs.map(d => docData(d) as Location).filter(l => l.isActive).sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function createLocation(data: { name: string; address: string; phone: string }): Promise<Location> {
@@ -59,25 +58,20 @@ export async function getLocationStats(): Promise<LocationStats[]> {
   const today      = now.toISOString().split('T')[0]
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
 
-  const [locations, staffSnap, monthApptSnap, todayApptSnap] = await Promise.all([
+  const [locations, staffSnap, apptSnap] = await Promise.all([
     getLocations(),
     adminDb.collection('staff')
       .where('tenantId', '==', tenantId)
-      .where('isActive', '==', true)
       .get(),
     adminDb.collection('appointments')
       .where('tenantId', '==', tenantId)
-      .where('date', '>=', monthStart)
-      .get(),
-    adminDb.collection('appointments')
-      .where('tenantId', '==', tenantId)
-      .where('date', '==', today)
       .get(),
   ])
 
-  const staff      = staffSnap.docs.map(d => d.data())
-  const monthApts  = monthApptSnap.docs.map(d => d.data())
-  const todayApts  = todayApptSnap.docs.map(d => d.data())
+  const staff     = staffSnap.docs.map(d => d.data()).filter((s: any) => s.isActive)
+  const allApts   = apptSnap.docs.map(d => d.data())
+  const monthApts = allApts.filter(a => a.date >= monthStart)
+  const todayApts = allApts.filter(a => a.date === today)
 
   return locations.map(loc => ({
     ...loc,

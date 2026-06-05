@@ -37,10 +37,10 @@ export async function getInventory(): Promise<Product[]> {
   if (!tenantId) return []
   const snap = await adminDb.collection('inventory')
     .where('tenantId', '==', tenantId)
-    .where('isActive', '==', true)
     .get()
   return snap.docs
     .map(d => docData(d) as Product)
+    .filter(p => p.isActive)
     .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name))
 }
 

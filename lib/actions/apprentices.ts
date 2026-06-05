@@ -8,10 +8,11 @@ import type { Apprentice, ProgressNote, SkillSignOff } from '@/lib/types'
 export async function getApprentices(locationId?: string | null): Promise<Apprentice[]> {
   const tenantId = await getTenantId()
   if (!tenantId) return []
-  let q: FirebaseFirestore.Query = adminDb.collection('apprentices').where('tenantId', '==', tenantId)
-  if (locationId) q = q.where('locationId', '==', locationId)
-  const snap = await q.get()
-  return snap.docs.map(d => docData(d) as Apprentice).sort((a, b) => a.name.localeCompare(b.name))
+  const snap = await adminDb.collection('apprentices').where('tenantId', '==', tenantId).get()
+  return snap.docs
+    .map(d => docData(d) as Apprentice)
+    .filter(a => !locationId || a.locationId === locationId)
+    .sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function createApprentice(data: {

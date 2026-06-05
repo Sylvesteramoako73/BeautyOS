@@ -11,10 +11,10 @@ export async function getTasksForApprentice(apprenticeId: string): Promise<Appre
   if (!tenantId) return []
   const snap = await adminDb.collection('apprenticeTasks')
     .where('tenantId', '==', tenantId)
-    .where('apprenticeId', '==', apprenticeId)
     .get()
   return snap.docs
     .map(d => docData(d) as ApprenticeTask)
+    .filter(t => t.apprenticeId === apprenticeId)
     .sort((a, b) =>
       (STATUS_ORDER[a.status] ?? 0) - (STATUS_ORDER[b.status] ?? 0) ||
       (a.dueDate ?? '').localeCompare(b.dueDate ?? '')
