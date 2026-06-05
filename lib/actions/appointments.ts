@@ -36,9 +36,8 @@ export async function getAppointments(filters?: {
     results = results.filter(a => a.status === filters.status)
   }
 
-  return results.sort((a, b) =>
-    a.date !== b.date ? a.date.localeCompare(b.date) : a.startTime.localeCompare(b.startTime)
-  )
+  // Most recently booked at the top so new appointments are immediately visible
+  return results.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 
 export async function getTodayAppointments(locationId?: string | null): Promise<Appointment[]> {
