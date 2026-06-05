@@ -103,6 +103,23 @@ export async function updateStaff(id: string, data: {
     ...(locationId !== undefined && { locationId, locationName }),
     updatedAt: new Date().toISOString(),
   })
+
+  // Sync locationId to the user account that has the same email, so branch-lock
+  // takes effect immediately when a manager/staff logs in next time.
+  if (locationId !== undefined) {
+    const staffDoc = await col().doc(id).get()
+    const staffEmail = staffDoc.data()?.email
+    if (staffEmail) {
+      const userSnap = await adminDb.collection('users')
+        .where('email', '==', staffEmail)
+        .limit(1)
+        .get()
+      if (!userSnap.empty) {
+        await userSnap.docs[0].ref.update({ locationId: locationId ?? null })
+      }
+    }
+  }
+
   revalidatePath('/staff')
   const doc = await col().doc(id).get()
   return docData(doc) as Staff

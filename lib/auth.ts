@@ -12,28 +12,20 @@ export const getSessionUser = cache(async () => {
   try {
     const decoded = await adminAuth.verifySessionCookie(sessionCookie, true)
     const doc     = await adminDb.collection('users').doc(decoded.uid).get()
-    const role    = (doc.data()?.role as Role) ?? 'staff'
-    const email   = decoded.email ?? null
-
-    // For non-owners, look up their staff record to find which branch they're assigned to.
-    // This locks managers/staff to their branch — they cannot see other branches' data.
-    let locationId: string | null = null
-    if (role !== 'owner' && email) {
-      const staffSnap = await adminDb.collection('staff')
-        .where('email', '==', email)
-        .limit(1)
-        .get()
-      if (!staffSnap.empty) {
-        locationId = staffSnap.docs[0].data().locationId ?? null
-      }
-    }
+    const role       = (doc.data()?.role as Role) ?? 'staff'
+    const email      = decoded.email ?? null
+    // locationId stored directly on the users doc — set via Settings or staff management.
+    // Null means not branch-locked (owner, or manager/staff who can see all branches).
+    const locationId = role === 'owner'
+      ? null
+      : (doc.data()?.locationId as string | null) ?? null
 
     return {
-      uid:        decoded.uid,
-      name:       doc.data()?.name ?? decoded.name ?? email?.split('@')[0] ?? 'User',
+      uid:   decoded.uid,
+      name:  doc.data()?.name ?? decoded.name ?? email?.split('@')[0] ?? 'User',
       email,
       role,
-      locationId, // null = not branch-locked (sees all / uses cookie)
+      locationId,
     }
   } catch {
     return null
