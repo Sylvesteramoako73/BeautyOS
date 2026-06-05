@@ -1,9 +1,8 @@
 import { TrendingUp, TrendingDown, AlertCircle, ChevronRight, Check } from 'lucide-react'
 import Link from 'next/link'
-import { cookies } from 'next/headers'
 import { getDashboardStats, getTodayAppointments } from '@/lib/actions/appointments'
 import { getStaffWithStats } from '@/lib/actions/staff'
-import { getSessionUser } from '@/lib/auth'
+import { getSessionUser, getEffectiveLocationId } from '@/lib/auth'
 import { formatCurrency, getGreeting } from '@/lib/utils'
 import { BookingLinkCard } from '@/components/dashboard/booking-link-card'
 
@@ -24,7 +23,7 @@ function StatBox({ label, value, sub, up }: { label: string; value: string; sub:
 export default async function DashboardPage() {
   const user             = await getSessionUser()
   const firstName        = user?.name.split(' ')[0] ?? 'there'
-  const activeLocationId = cookies().get('activeLocation')?.value ?? null
+  const activeLocationId = await getEffectiveLocationId()
 
   const [stats, todayApts, staffList] = await Promise.all([
     getDashboardStats(activeLocationId),

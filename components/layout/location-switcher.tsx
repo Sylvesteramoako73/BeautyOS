@@ -5,10 +5,20 @@ import { useLocation } from '@/components/location-provider'
 import { cn } from '@/lib/utils'
 
 export function LocationSwitcher() {
-  const { locations, activeId, activeName, setActive } = useLocation()
+  const { locations, activeId, activeName, lockedLocationId, setActive } = useLocation()
   const [open, setOpen] = useState(false)
 
   if (locations.length === 0) return null
+
+  // Branch-locked users see a read-only label — no dropdown
+  if (lockedLocationId) {
+    return (
+      <div className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+        <MapPin className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+        <span className="max-w-[140px] truncate">{activeName}</span>
+      </div>
+    )
+  }
 
   return (
     <div className="relative">
@@ -29,7 +39,6 @@ export function LocationSwitcher() {
               <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Branch</p>
             </div>
             <div className="py-1">
-              {/* All Locations */}
               <button
                 onClick={() => { setActive(null); setOpen(false) }}
                 className={cn('w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors',

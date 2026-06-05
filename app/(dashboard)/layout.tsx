@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { getSessionUser } from '@/lib/auth'
+import { getSessionUser, getEffectiveLocationId } from '@/lib/auth'
 import { getLocations } from '@/lib/actions/locations'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Topbar } from '@/components/layout/topbar'
@@ -13,13 +12,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect('/login')
 
   const [locations] = await Promise.all([getLocations()])
-  const activeLocationCookie = cookies().get('activeLocation')?.value ?? null
-  // Validate the cookie value is still a real location
-  const activeLocationId = locations.some(l => l.id === activeLocationCookie) ? activeLocationCookie : null
+
+  // Branch-locked users (manager/staff with a locationId) are forced to their branch.
+  // Owners use whatever branch they've selected in the switcher (cookie).
+  const activeLocationId = await getEffectiveLocationId()
 
   return (
     <ToastProvider>
-      <LocationProvider locations={locations} initialActiveId={activeLocationId}>
+      <LocationProvider
+        locations={locations}
+        initialActiveId={activeLocationId}
+        lockedLocationId={user.locationId}
+      >
         <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden">
           <Sidebar user={user} />
           <div className="flex-1 flex flex-col min-w-0 lg:ml-[220px]">

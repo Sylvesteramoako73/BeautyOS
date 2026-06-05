@@ -1,12 +1,11 @@
-import { cookies } from 'next/headers'
-import { requireRole } from '@/lib/auth'
+import { requireRole, getEffectiveLocationId } from '@/lib/auth'
 import { getStaffWithStats } from '@/lib/actions/staff'
 import { getLocations } from '@/lib/actions/locations'
 import { StaffView } from './view'
 
 export default async function StaffPage() {
   await requireRole('owner', 'manager')
-  const activeLocationId = cookies().get('activeLocation')?.value ?? null
+  const activeLocationId = await getEffectiveLocationId()
   const [allStaff, locations] = await Promise.all([getStaffWithStats(), getLocations()])
   // Include staff assigned to this branch OR staff with no branch assigned (available everywhere)
   const staff = activeLocationId
