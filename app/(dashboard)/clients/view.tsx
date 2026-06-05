@@ -1,8 +1,8 @@
 'use client'
 import { useState, useTransition } from 'react'
-import { Plus, Search, ChevronDown, ChevronUp, Phone, Mail, Calendar, Loader2, ExternalLink, Link2 } from 'lucide-react'
+import { Plus, Search, ChevronDown, ChevronUp, Phone, Mail, Calendar, Loader2, ExternalLink, Link2, Edit2, X, Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { createClient, deleteClient } from '@/lib/actions/clients'
+import { createClient, updateClient, deleteClient } from '@/lib/actions/clients'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import type { Client } from '@/lib/types'
 
@@ -23,6 +23,9 @@ export function ClientsView({ clients: initial }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [sort, setSort]         = useState<{ col: string; dir: 'asc'|'desc' }>({ col: 'name', dir: 'asc' })
   const [showForm, setShowForm] = useState(false)
+  const [editClient, setEditClient] = useState<Client | null>(null)
+  const [editForm, setEditForm] = useState({ name: '', phone: '', email: '', notes: '', tags: '' })
+  const [saving, setSaving] = useState(false)
   const [pending, startTransition] = useTransition()
 
   const [form, setForm] = useState({ name: '', phone: '', email: '', notes: '', dateOfBirth: '' })
@@ -51,6 +54,36 @@ export function ClientsView({ clients: initial }: Props) {
   })
 
   const totalRevenue = clients.reduce((s, c) => s + c.totalSpent, 0)
+
+  function openEdit(client: Client, e: React.MouseEvent) {
+    e.stopPropagation()
+    setEditClient(client)
+    setEditForm({
+      name:  client.name,
+      phone: client.phone,
+      email: client.email ?? '',
+      notes: client.notes ?? '',
+      tags:  client.tags ?? '',
+    })
+  }
+
+  function handleSaveEdit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editClient) return
+    setSaving(true)
+    startTransition(async () => {
+      const updated = await updateClient(editClient.id, {
+        name:  editForm.name,
+        phone: editForm.phone,
+        email: editForm.email || undefined,
+        notes: editForm.notes || undefined,
+        tags:  editForm.tags || undefined,
+      })
+      setClients(prev => prev.map(c => c.id === editClient.id ? updated : c))
+      setEditClient(null)
+      setSaving(false)
+    })
+  }
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -207,6 +240,12 @@ export function ClientsView({ clients: initial }: Props) {
                           <Link2 className="h-3.5 w-3.5" /> Portal Link
                         </button>
                         <button
+                          className="btn-secondary"
+                          onClick={e => openEdit(client, e)}
+                        >
+                          <Edit2 className="h-3.5 w-3.5" /> Edit
+                        </button>
+                        <button
                           className="btn-ghost text-red-600 hover:bg-red-50 dark:hover:bg-red-950 ml-auto"
                           onClick={() => { startTransition(async () => { await deleteClient(client.id); setClients(p => p.filter(c => c.id !== client.id)) }) }}
                         >
@@ -222,6 +261,51 @@ export function ClientsView({ clients: initial }: Props) {
         </table>
         {filtered.length === 0 && <div className="text-center py-12 text-sm text-gray-500">No clients match your search.</div>}
       </div>
+
+      {/* Edit Client Modal */}
+      {editClient && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Edit Client</h2>
+              <button onClick={() => setEditClient(null)} className="btn-ghost h-7 w-7 p-0 justify-center">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="form-label">Full Name *</label>
+                  <input required value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className="form-input w-full" />
+                </div>
+                <div>
+                  <label className="form-label">Phone *</label>
+                  <input required value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} className="form-input w-full" />
+                </div>
+                <div>
+                  <label className="form-label">Email</label>
+                  <input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} className="form-input w-full" />
+                </div>
+                <div className="col-span-2">
+                  <label className="form-label">Tags <span className="text-gray-400 font-normal">(comma-separated, e.g. VIP, Regular)</span></label>
+                  <input value={editForm.tags} onChange={e => setEditForm(f => ({ ...f, tags: e.target.value }))} placeholder="VIP, Regular" className="form-input w-full" />
+                </div>
+                <div className="col-span-2">
+                  <label className="form-label">Notes</label>
+                  <textarea value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={3} className="form-input w-full h-auto py-2" />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-1">
+                <button type="button" onClick={() => setEditClient(null)} className="btn-secondary">Cancel</button>
+                <button type="submit" disabled={saving} className="btn-primary">
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
