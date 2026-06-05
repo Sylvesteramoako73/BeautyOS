@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { getSessionUser, getEffectiveLocationId } from '@/lib/auth'
 import { getLocations } from '@/lib/actions/locations'
+import { getTenant } from '@/lib/actions/tenants'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Topbar } from '@/components/layout/topbar'
 import { ToastProvider } from '@/components/ui/toast'
@@ -11,11 +13,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await getSessionUser()
   if (!user) redirect('/login')
 
-  const [locations] = await Promise.all([getLocations()])
+  const [locations, tenant] = await Promise.all([
+    getLocations(),
+    user.tenantId ? getTenant(user.tenantId) : null,
+  ])
 
-  // Branch-locked users (manager/staff with a locationId) are forced to their branch.
-  // Owners use whatever branch they've selected in the switcher (cookie).
   const activeLocationId = await getEffectiveLocationId()
+
+  // Trial banner: show for owners only when trialing
+  const daysLeft = tenant?.subscriptionStatus === 'trialing' && tenant.trialEndsAt
+    ? Math.max(0, Math.ceil((new Date(tenant.trialEndsAt).getTime() - Date.now()) / 86400000))
+    : null
+  const showTrialBanner = user.role === 'owner' && tenant?.subscriptionStatus === 'trialing' && daysLeft !== null
 
   return (
     <ToastProvider>
@@ -27,6 +36,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden">
           <Sidebar user={user} />
           <div className="flex-1 flex flex-col min-w-0 lg:ml-[220px]">
+            {showTrialBanner && (
+              <div className={`flex items-center justify-between px-4 py-2 text-xs font-medium ${daysLeft <= 3 ? 'bg-red-600' : 'bg-amber-500'} text-white`}>
+                <span>
+                  {daysLeft === 0
+                    ? 'Your free trial has ended. Subscribe to keep using BeautyOS.'
+                    : `Free trial: ${daysLeft} day${daysLeft !== 1 ? 's' : ''} remaining.`}
+                </span>
+                <Link href="/pricing" className="ml-4 px-3 py-1 bg-white text-gray-900 rounded-md font-semibold hover:bg-gray-100 transition-colors shrink-0">
+                  Subscribe
+                </Link>
+              </div>
+            )}
             <Topbar userName={user.name} />
             <main className="flex-1 overflow-y-auto p-3 sm:p-6">
               <ErrorBoundary>
