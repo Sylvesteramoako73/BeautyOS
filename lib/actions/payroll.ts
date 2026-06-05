@@ -1,7 +1,7 @@
 'use server'
 import { adminDb } from '@/lib/firebase-admin'
+import { getTenantId } from '@/lib/auth'
 import { getStaff } from './staff'
-import { formatCurrency } from '@/lib/utils'
 
 export type PayrollEntry = {
   id: string
@@ -15,10 +15,13 @@ export type PayrollEntry = {
 }
 
 export async function getPayrollData(startDate: string, endDate: string): Promise<PayrollEntry[]> {
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
   const staff = await getStaff()
 
   // Range on same field — no composite index needed
   const snap = await adminDb.collection('appointments')
+    .where('tenantId', '==', tenantId)
     .where('date', '>=', startDate)
     .where('date', '<=', endDate)
     .get()

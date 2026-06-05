@@ -2,23 +2,32 @@
 import { revalidatePath } from 'next/cache'
 import { adminDb, docData } from '@/lib/firebase-admin'
 import { ServiceSchema } from '@/lib/validation'
+import { getTenantId } from '@/lib/auth'
 import type { Service, ServiceWithStats } from '@/lib/types'
 
-const col = () => adminDb.collection('services')
-
 export async function getServices(): Promise<Service[]> {
-  const snap = await col().where('isActive', '==', true).get()
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
+  const snap = await adminDb.collection('services')
+    .where('tenantId', '==', tenantId)
+    .where('isActive', '==', true)
+    .get()
   return snap.docs.map(d => docData(d) as Service).sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name))
 }
 
 export async function getServicesWithStats(): Promise<ServiceWithStats[]> {
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
   const now        = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
 
   // Fetch services + appointments in parallel (1 query each — was N+1 before)
   const [services, apptSnap] = await Promise.all([
     getServices(),
-    adminDb.collection('appointments').where('date', '>=', monthStart).get(),
+    adminDb.collection('appointments')
+      .where('tenantId', '==', tenantId)
+      .where('date', '>=', monthStart)
+      .get(),
   ])
 
   const appointments = apptSnap.docs.map(d => d.data() as any)
@@ -42,11 +51,13 @@ export async function createService(data: {
   name: string; category: string; description?: string
   duration: number; price: number; isPopular?: boolean
 }): Promise<Service> {
+  const tenantId = await getTenantId()
   const parsed = ServiceSchema.parse(data)
-  const ref = col().doc()
+  const ref = adminDb.collection('services').doc()
   const now = new Date().toISOString()
   const doc = {
     ...parsed,
+    tenantId: tenantId ?? null,
     description: data.description ?? null,
     isPopular: data.isPopular ?? false,
     isActive: true,
@@ -63,14 +74,14 @@ export async function updateService(id: string, data: {
   duration?: number; price?: number; isPopular?: boolean
 }): Promise<Service> {
   const parsed = ServiceSchema.partial().parse(data)
-  await col().doc(id).update({ ...parsed, updatedAt: new Date().toISOString() })
+  await adminDb.collection('services').doc(id).update({ ...parsed, updatedAt: new Date().toISOString() })
   revalidatePath('/services')
-  const doc = await col().doc(id).get()
+  const doc = await adminDb.collection('services').doc(id).get()
   return docData(doc) as Service
 }
 
 export async function deleteService(id: string) {
-  await col().doc(id).update({ isActive: false, updatedAt: new Date().toISOString() })
+  await adminDb.collection('services').doc(id).update({ isActive: false, updatedAt: new Date().toISOString() })
   revalidatePath('/services')
 }
 

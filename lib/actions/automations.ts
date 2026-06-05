@@ -1,21 +1,28 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { adminDb, docData } from '@/lib/firebase-admin'
+import { getTenantId } from '@/lib/auth'
 import type { Automation, AutomationWithStats } from '@/lib/types'
 
-const col = () => adminDb.collection('automations')
-
 export async function getAutomations(): Promise<Automation[]> {
-  const snap = await col().orderBy('createdAt').get()
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
+  const snap = await adminDb.collection('automations')
+    .where('tenantId', '==', tenantId)
+    .orderBy('createdAt')
+    .get()
   return snap.docs.map(d => docData(d) as Automation)
 }
 
 export async function getAutomationStats(): Promise<AutomationWithStats[]> {
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
   const automations = await getAutomations()
   const monthStart  = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
 
   // Fetch all logs for this month in one query (single where field)
   const logsSnap = await adminDb.collection('automationLogs')
+    .where('tenantId', '==', tenantId)
     .where('createdAt', '>=', monthStart)
     .get()
   const allLogs = logsSnap.docs.map(d => d.data())
@@ -31,21 +38,23 @@ export async function getAutomationStats(): Promise<AutomationWithStats[]> {
 }
 
 export async function toggleAutomation(id: string): Promise<Automation> {
-  const doc = await col().doc(id).get()
+  const doc = await adminDb.collection('automations').doc(id).get()
   const current = doc.data()!.isActive
-  await col().doc(id).update({ isActive: !current, updatedAt: new Date().toISOString() })
+  await adminDb.collection('automations').doc(id).update({ isActive: !current, updatedAt: new Date().toISOString() })
   revalidatePath('/automations')
-  return docData(await col().doc(id).get()) as Automation
+  return docData(await adminDb.collection('automations').doc(id).get()) as Automation
 }
 
 export async function createAutomation(data: {
   name: string; description?: string; trigger: string; channel: string
   delayMinutes: number; messageTemplate: string; conditionJson?: string
 }): Promise<Automation> {
-  const ref = col().doc()
+  const tenantId = await getTenantId()
+  const ref = adminDb.collection('automations').doc()
   const now = new Date().toISOString()
   const doc = {
     ...data,
+    tenantId: tenantId ?? null,
     description: data.description ?? null,
     conditionJson: data.conditionJson ?? '{}',
     isActive: true,
@@ -61,13 +70,13 @@ export async function updateAutomation(id: string, data: {
   name?: string; description?: string; messageTemplate?: string
   isActive?: boolean; channel?: string; delayMinutes?: number
 }): Promise<Automation> {
-  await col().doc(id).update({ ...data, updatedAt: new Date().toISOString() })
+  await adminDb.collection('automations').doc(id).update({ ...data, updatedAt: new Date().toISOString() })
   revalidatePath('/automations')
-  return docData(await col().doc(id).get()) as Automation
+  return docData(await adminDb.collection('automations').doc(id).get()) as Automation
 }
 
 export async function deleteAutomation(id: string) {
-  await col().doc(id).delete()
+  await adminDb.collection('automations').doc(id).delete()
   revalidatePath('/automations')
 }
 

@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache'
 import { adminDb, docData } from '@/lib/firebase-admin'
 import { LocationSchema } from '@/lib/validation'
+import { getTenantId } from '@/lib/auth'
 
 export type Location = {
   id: string
@@ -12,18 +13,22 @@ export type Location = {
   createdAt: string
 }
 
-const col = () => adminDb.collection('locations')
-
 export async function getLocations(): Promise<Location[]> {
-  const snap = await col().where('isActive', '==', true).get()
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
+  const snap = await adminDb.collection('locations')
+    .where('tenantId', '==', tenantId)
+    .where('isActive', '==', true)
+    .get()
   return snap.docs.map(d => docData(d) as Location).sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function createLocation(data: { name: string; address: string; phone: string }): Promise<Location> {
+  const tenantId = await getTenantId()
   const parsed = LocationSchema.parse(data)
-  const ref = col().doc()
+  const ref = adminDb.collection('locations').doc()
   const now = new Date().toISOString()
-  const doc = { ...parsed, isActive: true, createdAt: now }
+  const doc = { ...parsed, tenantId: tenantId ?? null, isActive: true, createdAt: now }
   await ref.set(doc)
   revalidatePath('/locations')
   return { id: ref.id, ...doc }
@@ -31,12 +36,12 @@ export async function createLocation(data: { name: string; address: string; phon
 
 export async function updateLocation(id: string, data: { name?: string; address?: string; phone?: string }) {
   const parsed = LocationSchema.partial().parse(data)
-  await col().doc(id).update(parsed)
+  await adminDb.collection('locations').doc(id).update(parsed)
   revalidatePath('/locations')
 }
 
 export async function deleteLocation(id: string) {
-  await col().doc(id).update({ isActive: false })
+  await adminDb.collection('locations').doc(id).update({ isActive: false })
   revalidatePath('/locations')
 }
 
@@ -48,15 +53,26 @@ export type LocationStats = Location & {
 }
 
 export async function getLocationStats(): Promise<LocationStats[]> {
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
   const now        = new Date()
   const today      = now.toISOString().split('T')[0]
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
 
   const [locations, staffSnap, monthApptSnap, todayApptSnap] = await Promise.all([
     getLocations(),
-    adminDb.collection('staff').where('isActive', '==', true).get(),
-    adminDb.collection('appointments').where('date', '>=', monthStart).get(),
-    adminDb.collection('appointments').where('date', '==', today).get(),
+    adminDb.collection('staff')
+      .where('tenantId', '==', tenantId)
+      .where('isActive', '==', true)
+      .get(),
+    adminDb.collection('appointments')
+      .where('tenantId', '==', tenantId)
+      .where('date', '>=', monthStart)
+      .get(),
+    adminDb.collection('appointments')
+      .where('tenantId', '==', tenantId)
+      .where('date', '==', today)
+      .get(),
   ])
 
   const staff      = staffSnap.docs.map(d => d.data())

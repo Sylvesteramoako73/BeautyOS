@@ -1,12 +1,16 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { adminDb, docData } from '@/lib/firebase-admin'
+import { getTenantId } from '@/lib/auth'
 import type { AttendanceRecord } from '@/lib/types'
 
-const col = () => adminDb.collection('apprenticeAttendance')
-
 export async function getAttendanceForApprentice(apprenticeId: string): Promise<AttendanceRecord[]> {
-  const snap = await col().where('apprenticeId', '==', apprenticeId).get()
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
+  const snap = await adminDb.collection('apprenticeAttendance')
+    .where('tenantId', '==', tenantId)
+    .where('apprenticeId', '==', apprenticeId)
+    .get()
   return snap.docs
     .map(d => docData(d) as AttendanceRecord)
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -19,13 +23,16 @@ export async function logAttendance(data: {
   notes?: string
   recordedBy: string
 }): Promise<AttendanceRecord> {
-  const existing = await col()
+  const tenantId = await getTenantId()
+  const existing = await adminDb.collection('apprenticeAttendance')
+    .where('tenantId', '==', tenantId ?? '')
     .where('apprenticeId', '==', data.apprenticeId)
     .where('date', '==', data.date)
     .get()
 
   const now = new Date().toISOString()
   const payload = {
+    tenantId:     tenantId ?? null,
     apprenticeId: data.apprenticeId,
     date:         data.date,
     status:       data.status,
@@ -40,7 +47,7 @@ export async function logAttendance(data: {
     return docData(updated) as AttendanceRecord
   }
 
-  const ref = col().doc()
+  const ref = adminDb.collection('apprenticeAttendance').doc()
   await ref.set({ ...payload, createdAt: now })
   revalidatePath('/apprentices')
   return { id: ref.id, ...payload, createdAt: now }

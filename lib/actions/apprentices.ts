@@ -2,12 +2,13 @@
 import { revalidatePath } from 'next/cache'
 import { adminDb, docData, FieldValue } from '@/lib/firebase-admin'
 import { ApprenticeSchema } from '@/lib/validation'
+import { getTenantId } from '@/lib/auth'
 import type { Apprentice, ProgressNote, SkillSignOff } from '@/lib/types'
 
-const col = () => adminDb.collection('apprentices')
-
 export async function getApprentices(locationId?: string | null): Promise<Apprentice[]> {
-  let q: FirebaseFirestore.Query = col()
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
+  let q: FirebaseFirestore.Query = adminDb.collection('apprentices').where('tenantId', '==', tenantId)
   if (locationId) q = q.where('locationId', '==', locationId)
   const snap = await q.get()
   return snap.docs.map(d => docData(d) as Apprentice).sort((a, b) => a.name.localeCompare(b.name))
@@ -20,6 +21,7 @@ export async function createApprentice(data: {
   expectedGraduationDate?: string | null; programDurationMonths?: number | null
   specialtiesLearning?: string; stipend?: number | null; notes?: string
 }): Promise<Apprentice> {
+  const tenantId = await getTenantId()
   const parsed = ApprenticeSchema.parse({
     ...data,
     stage: data.stage as 'beginner' | 'intermediate' | 'advanced',
@@ -41,12 +43,13 @@ export async function createApprentice(data: {
     signedOffBy: null,
     signedOffAt: null,
   }))
-  const ref = col().doc()
+  const ref = adminDb.collection('apprentices').doc()
   const now = new Date().toISOString()
   const doc = {
     name: parsed.name,
     phone: data.phone || null,
     email: data.email || null,
+    tenantId: tenantId ?? null,
     mentorId: parsed.mentorId ?? null,
     mentorName,
     locationId: parsed.locationId ?? null,
@@ -106,7 +109,7 @@ export async function updateApprentice(id: string, data: {
   if (specialtiesLearning !== undefined) {
     updates.specialtiesLearning = specialtiesLearning
     // Sync skillSignOffs: add new skills, keep existing sign-off data
-    const existing = (await col().doc(id).get()).data()?.skillSignOffs as SkillSignOff[] ?? []
+    const existing = (await adminDb.collection('apprentices').doc(id).get()).data()?.skillSignOffs as SkillSignOff[] ?? []
     const newSkills = specialtiesLearning.split(',').filter(s => s.trim())
     updates.skillSignOffs = newSkills.map(s => {
       const found = existing.find(e => e.skill === s.trim())
@@ -114,9 +117,9 @@ export async function updateApprentice(id: string, data: {
     })
   }
 
-  await col().doc(id).update(updates)
+  await adminDb.collection('apprentices').doc(id).update(updates)
   revalidatePath('/apprentices')
-  const doc = await col().doc(id).get()
+  const doc = await adminDb.collection('apprentices').doc(id).get()
   return docData(doc) as Apprentice
 }
 
@@ -131,7 +134,7 @@ export async function addProgressNote(
     rating:  note.rating,
     addedBy: note.addedBy,
   }
-  await col().doc(apprenticeId).update({
+  await adminDb.collection('apprentices').doc(apprenticeId).update({
     progressNotes: FieldValue.arrayUnion(newNote),
     updatedAt: new Date().toISOString(),
   })
@@ -144,7 +147,7 @@ export async function updateSkillSignOff(
   status: SkillSignOff['status'],
   signedOffBy: string
 ): Promise<void> {
-  const doc = await col().doc(apprenticeId).get()
+  const doc = await adminDb.collection('apprentices').doc(apprenticeId).get()
   const existing: SkillSignOff[] = doc.data()?.skillSignOffs ?? []
   const idx = existing.findIndex(s => s.skill === skill)
   const updated: SkillSignOff = {
@@ -156,7 +159,7 @@ export async function updateSkillSignOff(
   if (idx >= 0) existing[idx] = updated
   else existing.push(updated)
 
-  await col().doc(apprenticeId).update({
+  await adminDb.collection('apprentices').doc(apprenticeId).update({
     skillSignOffs: existing,
     updatedAt: new Date().toISOString(),
   })

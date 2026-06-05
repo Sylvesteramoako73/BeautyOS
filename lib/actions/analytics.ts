@@ -1,7 +1,9 @@
 'use server'
 import { adminDb } from '@/lib/firebase-admin'
+import { getTenantId } from '@/lib/auth'
 
 export async function getAnalyticsData(period: 'week' | 'month' = 'week', locationId?: string | null) {
+  const tenantId = await getTenantId()
   const now  = new Date()
   const days = period === 'week' ? 7 : 30
 
@@ -13,15 +15,25 @@ export async function getAnalyticsData(period: 'week' | 'month' = 'week', locati
     const d = new Date(now); d.setDate(d.getDate() - (days - 1)); return d.toISOString().split('T')[0]
   })()
 
+  if (!tenantId) return {
+    revenueTrend: [], serviceBreakdown: [], paymentMethods: [], locationBreakdown: [],
+    kpis: { monthlyRevenue: 0, monthlyGrowth: 0, totalBookings: 0, newClients: 0, newClientsGrowth: 0, completionRate: 0 },
+  }
+
+  const aptsBase     = adminDb.collection('appointments').where('tenantId', '==', tenantId)
+  const clientsBase  = adminDb.collection('clients').where('tenantId', '==', tenantId)
+  const servicesBase = adminDb.collection('services').where('tenantId', '==', tenantId)
+  const invoicesBase = adminDb.collection('invoices').where('tenantId', '==', tenantId)
+
   // Single-field where queries only — no composite indexes needed
   const [periodSnap, monthSnap, lastMonthSnap, newClientsSnap, allClientsSnap, servicesSnap, invoicesSnap] = await Promise.all([
-    adminDb.collection('appointments').where('date', '>=', startDate).get(),
-    adminDb.collection('appointments').where('date', '>=', monthStart).get(),
-    adminDb.collection('appointments').where('date', '>=', lastMonthStart).get(),
-    adminDb.collection('clients').where('createdAt', '>=', new Date(monthStart).toISOString()).get(),
-    adminDb.collection('clients').where('createdAt', '>=', new Date(lastMonthStart).toISOString()).get(),
-    adminDb.collection('services').where('isActive', '==', true).get(),
-    adminDb.collection('invoices').where('status', '==', 'paid').get(),
+    aptsBase.where('date', '>=', startDate).get(),
+    aptsBase.where('date', '>=', monthStart).get(),
+    aptsBase.where('date', '>=', lastMonthStart).get(),
+    clientsBase.where('createdAt', '>=', new Date(monthStart).toISOString()).get(),
+    clientsBase.where('createdAt', '>=', new Date(lastMonthStart).toISOString()).get(),
+    servicesBase.where('isActive', '==', true).get(),
+    invoicesBase.where('status', '==', 'paid').get(),
   ])
 
   const loc = (a: any) => !locationId || a.locationId === locationId

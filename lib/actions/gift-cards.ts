@@ -1,6 +1,7 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { adminDb, docData } from '@/lib/firebase-admin'
+import { getTenantId } from '@/lib/auth'
 import { z } from 'zod'
 
 export type GiftCard = {
@@ -24,8 +25,6 @@ export type GiftCardTx = {
   appointmentId: string | null
 }
 
-const col = () => adminDb.collection('giftCards')
-
 function generateCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   const seg = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
@@ -41,14 +40,24 @@ const IssueSchema = z.object({
 })
 
 export async function getGiftCards(): Promise<GiftCard[]> {
-  const snap = await col().where('isActive', '==', true).get()
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
+  const snap = await adminDb.collection('giftCards')
+    .where('tenantId', '==', tenantId)
+    .where('isActive', '==', true)
+    .get()
   return snap.docs
     .map(d => docData(d) as GiftCard)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 
 export async function getGiftCardByCode(code: string): Promise<GiftCard | null> {
-  const snap = await col().where('code', '==', code.toUpperCase().trim()).get()
+  const tenantId = await getTenantId()
+  if (!tenantId) return null
+  const snap = await adminDb.collection('giftCards')
+    .where('tenantId', '==', tenantId)
+    .where('code', '==', code.toUpperCase().trim())
+    .get()
   if (snap.empty) return null
   return docData(snap.docs[0]) as GiftCard
 }
@@ -56,10 +65,12 @@ export async function getGiftCardByCode(code: string): Promise<GiftCard | null> 
 export async function issueGiftCard(data: {
   initialValue: number; issuedTo: string; issuedBy: string; note?: string; expiresAt?: string | null
 }): Promise<GiftCard> {
+  const tenantId = await getTenantId()
   const parsed = IssueSchema.parse(data)
-  const ref    = col().doc()
+  const ref    = adminDb.collection('giftCards').doc()
   const now    = new Date().toISOString()
-  const doc: Omit<GiftCard, 'id'> = {
+  const doc: Omit<GiftCard, 'id'> & { tenantId: string | null } = {
+    tenantId:     tenantId ?? null,
     code:         generateCode(),
     initialValue: parsed.initialValue,
     balance:      parsed.initialValue,
@@ -79,7 +90,12 @@ export async function issueGiftCard(data: {
 export async function redeemGiftCard(code: string, amount: number, appointmentId?: string): Promise<{
   success: boolean; newBalance: number; error?: string
 }> {
-  const snap = await col().where('code', '==', code.toUpperCase().trim()).get()
+  const tenantId = await getTenantId()
+  if (!tenantId) return { success: false, newBalance: 0, error: 'Not authenticated' }
+  const snap = await adminDb.collection('giftCards')
+    .where('tenantId', '==', tenantId)
+    .where('code', '==', code.toUpperCase().trim())
+    .get()
   if (snap.empty) return { success: false, newBalance: 0, error: 'Gift card not found' }
 
   const doc  = snap.docs[0]
@@ -110,6 +126,6 @@ export async function redeemGiftCard(code: string, amount: number, appointmentId
 }
 
 export async function voidGiftCard(id: string) {
-  await col().doc(id).update({ isActive: false })
+  await adminDb.collection('giftCards').doc(id).update({ isActive: false })
   revalidatePath('/gift-cards')
 }

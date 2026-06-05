@@ -1,13 +1,18 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { adminDb, docData } from '@/lib/firebase-admin'
+import { getTenantId } from '@/lib/auth'
 import type { ApprenticeTask } from '@/lib/types'
 
-const col = () => adminDb.collection('apprenticeTasks')
 const STATUS_ORDER: Record<string, number> = { pending: 0, in_progress: 1, completed: 2 }
 
 export async function getTasksForApprentice(apprenticeId: string): Promise<ApprenticeTask[]> {
-  const snap = await col().where('apprenticeId', '==', apprenticeId).get()
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
+  const snap = await adminDb.collection('apprenticeTasks')
+    .where('tenantId', '==', tenantId)
+    .where('apprenticeId', '==', apprenticeId)
+    .get()
   return snap.docs
     .map(d => docData(d) as ApprenticeTask)
     .sort((a, b) =>
@@ -24,9 +29,11 @@ export async function createTask(data: {
   priority: 'low' | 'medium' | 'high'
   assignedBy: string
 }): Promise<ApprenticeTask> {
-  const ref = col().doc()
+  const tenantId = await getTenantId()
+  const ref = adminDb.collection('apprenticeTasks').doc()
   const now = new Date().toISOString()
   const doc = {
+    tenantId:     tenantId ?? null,
     apprenticeId: data.apprenticeId,
     title:        data.title.trim(),
     description:  data.description?.trim() || null,
@@ -44,7 +51,7 @@ export async function createTask(data: {
 }
 
 export async function updateTaskStatus(id: string, status: ApprenticeTask['status']): Promise<void> {
-  await col().doc(id).update({
+  await adminDb.collection('apprenticeTasks').doc(id).update({
     status,
     completedAt: status === 'completed' ? new Date().toISOString() : null,
     updatedAt:   new Date().toISOString(),
@@ -53,6 +60,6 @@ export async function updateTaskStatus(id: string, status: ApprenticeTask['statu
 }
 
 export async function deleteTask(id: string): Promise<void> {
-  await col().doc(id).delete()
+  await adminDb.collection('apprenticeTasks').doc(id).delete()
   revalidatePath('/apprentices')
 }

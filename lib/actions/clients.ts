@@ -2,25 +2,36 @@
 import { revalidatePath } from 'next/cache'
 import { adminDb, docData } from '@/lib/firebase-admin'
 import { ClientSchema } from '@/lib/validation'
+import { getTenantId } from '@/lib/auth'
 import type { Client } from '@/lib/types'
 
-const col = () => adminDb.collection('clients')
-
 export async function getClients(): Promise<Client[]> {
-  const snap = await col().where('isActive', '==', true).get()
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
+  const snap = await adminDb.collection('clients')
+    .where('tenantId', '==', tenantId)
+    .where('isActive', '==', true)
+    .get()
   return snap.docs.map(d => docData(d) as Client).sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function getClient(id: string): Promise<Client | null> {
-  const doc = await col().doc(id).get()
+  const tenantId = await getTenantId()
+  if (!tenantId) return null
+  const doc = await adminDb.collection('clients').doc(id).get()
   if (!doc.exists) return null
   return docData(doc) as Client
 }
 
 export async function getClientWithHistory(id: string) {
+  const tenantId = await getTenantId()
+  if (!tenantId) return null
   const [clientDoc, apptSnap] = await Promise.all([
-    col().doc(id).get(),
-    adminDb.collection('appointments').where('clientId', '==', id).get(),
+    adminDb.collection('clients').doc(id).get(),
+    adminDb.collection('appointments')
+      .where('tenantId', '==', tenantId)
+      .where('clientId', '==', id)
+      .get(),
   ])
   if (!clientDoc.exists) return null
   const client       = docData(clientDoc) as Client
@@ -33,12 +44,14 @@ export async function getClientWithHistory(id: string) {
 export async function createClient(data: {
   name: string; phone: string; email?: string; notes?: string; tags?: string; dateOfBirth?: string
 }): Promise<Client> {
+  const tenantId = await getTenantId()
   const parsed = ClientSchema.parse(data)
-  const ref = col().doc()
+  const ref = adminDb.collection('clients').doc()
   const now = new Date().toISOString()
   const { dateOfBirth, ...rest } = parsed
   const doc = {
     ...rest,
+    tenantId: tenantId ?? null,
     email: data.email ?? null,
     notes: data.notes ?? null,
     tags: data.tags ?? '',
@@ -63,19 +76,19 @@ export async function updateClient(id: string, data: {
   name?: string; phone?: string; email?: string; notes?: string; tags?: string; loyaltyTier?: string
 }): Promise<Client> {
   const parsed = ClientSchema.partial().parse(data)
-  await col().doc(id).update({ ...parsed, updatedAt: new Date().toISOString() })
+  await adminDb.collection('clients').doc(id).update({ ...parsed, updatedAt: new Date().toISOString() })
   revalidatePath('/clients')
-  const doc = await col().doc(id).get()
+  const doc = await adminDb.collection('clients').doc(id).get()
   return docData(doc) as Client
 }
 
 export async function deleteClient(id: string) {
-  await col().doc(id).update({ isActive: false, updatedAt: new Date().toISOString() })
+  await adminDb.collection('clients').doc(id).update({ isActive: false, updatedAt: new Date().toISOString() })
   revalidatePath('/clients')
 }
 
 export async function addLoyaltyPoints(clientId: string, points: number) {
-  const doc  = await col().doc(clientId).get()
+  const doc  = await adminDb.collection('clients').doc(clientId).get()
   const data = doc.data()
   if (!data) return
 
@@ -83,7 +96,7 @@ export async function addLoyaltyPoints(clientId: string, points: number) {
   const newTier   = calculateTier(newPoints, data.totalSpent ?? 0)
   const tierChanged = newTier !== data.loyaltyTier
 
-  await col().doc(clientId).update({
+  await adminDb.collection('clients').doc(clientId).update({
     loyaltyPoints: newPoints,
     loyaltyTier:   newTier,
     updatedAt:     new Date().toISOString(),

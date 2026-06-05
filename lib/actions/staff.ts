@@ -2,16 +2,22 @@
 import { revalidatePath } from 'next/cache'
 import { adminDb, docData } from '@/lib/firebase-admin'
 import { StaffSchema } from '@/lib/validation'
+import { getTenantId } from '@/lib/auth'
 import type { Staff, StaffWithStats } from '@/lib/types'
 
-const col = () => adminDb.collection('staff')
-
 export async function getStaff(): Promise<Staff[]> {
-  const snap = await col().where('isActive', '==', true).get()
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
+  const snap = await adminDb.collection('staff')
+    .where('tenantId', '==', tenantId)
+    .where('isActive', '==', true)
+    .get()
   return snap.docs.map(d => docData(d) as Staff).sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function getStaffWithStats(): Promise<StaffWithStats[]> {
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
   const today      = new Date().toISOString().split('T')[0]
   const now        = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
@@ -20,8 +26,14 @@ export async function getStaffWithStats(): Promise<StaffWithStats[]> {
 
   // Fetch appointments in bulk by date — avoids compound where clauses
   const [todaySnap, monthSnap] = await Promise.all([
-    adminDb.collection('appointments').where('date', '==', today).get(),
-    adminDb.collection('appointments').where('date', '>=', monthStart).get(),
+    adminDb.collection('appointments')
+      .where('tenantId', '==', tenantId)
+      .where('date', '==', today)
+      .get(),
+    adminDb.collection('appointments')
+      .where('tenantId', '==', tenantId)
+      .where('date', '>=', monthStart)
+      .get(),
   ])
 
   const todayApts = todaySnap.docs.map(d => d.data())
@@ -42,7 +54,7 @@ export async function getStaffWithStats(): Promise<StaffWithStats[]> {
 }
 
 export async function updateStaffAvailability(id: string, isAvailable: boolean) {
-  await col().doc(id).update({ isAvailable, updatedAt: new Date().toISOString() })
+  await adminDb.collection('staff').doc(id).update({ isAvailable, updatedAt: new Date().toISOString() })
   revalidatePath('/staff')
   revalidatePath('/')
 }
@@ -52,16 +64,18 @@ export async function createStaff(data: {
   specialties?: string; commissionRate?: number; systemRole?: string
   locationId?: string | null
 }): Promise<Staff> {
+  const tenantId = await getTenantId()
   const parsed = StaffSchema.parse({ ...data, commissionRate: data.commissionRate ?? 30 })
   let locationName: string | null = null
   if (parsed.locationId) {
     const locDoc = await adminDb.collection('locations').doc(parsed.locationId).get()
     locationName = locDoc.data()?.name ?? null
   }
-  const ref = col().doc()
+  const ref = adminDb.collection('staff').doc()
   const now = new Date().toISOString()
   const doc = {
     ...parsed,
+    tenantId: tenantId ?? null,
     phone: data.phone ?? null,
     email: data.email ?? null,
     specialties: data.specialties ?? '',
@@ -96,7 +110,7 @@ export async function updateStaff(id: string, data: {
       locationName = locDoc.data()?.name ?? null
     }
   }
-  await col().doc(id).update({
+  await adminDb.collection('staff').doc(id).update({
     ...parsed,
     ...(isActive !== undefined && { isActive }),
     ...(workingHours !== undefined && { workingHours }),
@@ -107,7 +121,7 @@ export async function updateStaff(id: string, data: {
   // Sync locationId to the user account that has the same email, so branch-lock
   // takes effect immediately when a manager/staff logs in next time.
   if (locationId !== undefined) {
-    const staffDoc = await col().doc(id).get()
+    const staffDoc = await adminDb.collection('staff').doc(id).get()
     const staffEmail = staffDoc.data()?.email
     if (staffEmail) {
       const userSnap = await adminDb.collection('users')
@@ -121,12 +135,15 @@ export async function updateStaff(id: string, data: {
   }
 
   revalidatePath('/staff')
-  const doc = await col().doc(id).get()
+  const doc = await adminDb.collection('staff').doc(id).get()
   return docData(doc) as Staff
 }
 
 export async function getStaffAppointmentsForReport(staffId: string, startDate: string, endDate: string) {
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
   const snap = await adminDb.collection('appointments')
+    .where('tenantId', '==', tenantId)
     .where('staffId', '==', staffId)
     .where('date', '>=', startDate)
     .where('date', '<=', endDate)

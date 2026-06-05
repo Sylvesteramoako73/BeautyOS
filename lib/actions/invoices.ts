@@ -1,5 +1,6 @@
 'use server'
 import { adminDb, docData } from '@/lib/firebase-admin'
+import { getTenantId } from '@/lib/auth'
 
 export type Invoice = {
   id: string
@@ -18,10 +19,10 @@ export type Invoice = {
   items: { serviceId: string; description: string; quantity: number; unitPrice: number; total: number }[]
 }
 
-const col = () => adminDb.collection('invoices')
-
 export async function getInvoices(filters?: { clientId?: string; status?: string }): Promise<Invoice[]> {
-  let q: FirebaseFirestore.Query = col()
+  const tenantId = await getTenantId()
+  if (!tenantId) return []
+  let q: FirebaseFirestore.Query = adminDb.collection('invoices').where('tenantId', '==', tenantId)
   if (filters?.clientId) q = q.where('clientId', '==', filters.clientId)
   else if (filters?.status) q = q.where('status', '==', filters.status)
 
@@ -36,9 +37,14 @@ export async function getInvoices(filters?: { clientId?: string; status?: string
 }
 
 export async function getInvoiceStats() {
+  const tenantId = await getTenantId()
+  if (!tenantId) return { total: 0, totalRevenue: 0, thisMonth: 0, monthRevenue: 0 }
   const now        = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const snap       = await col().where('status', '==', 'paid').get()
+  const snap       = await adminDb.collection('invoices')
+    .where('tenantId', '==', tenantId)
+    .where('status', '==', 'paid')
+    .get()
 
   const all       = snap.docs.map(d => d.data())
   const thisMonth = all.filter(i => i.createdAt >= monthStart)

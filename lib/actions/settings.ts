@@ -1,6 +1,7 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { adminDb } from '@/lib/firebase-admin'
+import { getTenantId } from '@/lib/auth'
 
 export type SalonSettings = {
   salonName: string
@@ -18,14 +19,16 @@ const DEFAULTS: SalonSettings = {
   email:     '',
 }
 
-const ref = () => adminDb.collection('settings').doc('salon')
-
 export async function getSalonSettings(): Promise<SalonSettings> {
-  const doc = await ref().get()
+  const tenantId = await getTenantId()
+  if (!tenantId) return DEFAULTS
+  const doc = await adminDb.collection('settings').doc(tenantId).get()
   return { ...DEFAULTS, ...(doc.data() ?? {}) }
 }
 
 export async function updateSalonSettings(data: Partial<SalonSettings>): Promise<void> {
-  await ref().set(data, { merge: true })
+  const tenantId = await getTenantId()
+  if (!tenantId) return
+  await adminDb.collection('settings').doc(tenantId).set(data, { merge: true })
   revalidatePath('/settings')
 }

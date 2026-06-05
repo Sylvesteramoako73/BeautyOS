@@ -1,5 +1,22 @@
 // Shared domain types — replaces @prisma/client types throughout the app
 
+export type TenantPlan = 'trial' | 'starter' | 'pro' | 'enterprise'
+export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled'
+
+export type Tenant = {
+  id: string
+  name: string           // salon display name
+  slug: string           // subdomain slug e.g. "hairport"
+  ownerId: string        // Firebase Auth UID of the owner
+  plan: TenantPlan
+  trialEndsAt: string    // ISO date
+  subscriptionStatus: SubscriptionStatus
+  paystackCustomerCode: string | null
+  paystackSubscriptionCode: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export type Client = {
   id: string
   name: string
