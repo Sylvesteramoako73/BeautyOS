@@ -6,14 +6,17 @@ import type { Apprentice, ProgressNote, SkillSignOff } from '@/lib/types'
 
 const col = () => adminDb.collection('apprentices')
 
-export async function getApprentices(): Promise<Apprentice[]> {
-  const snap = await col().get()
+export async function getApprentices(locationId?: string | null): Promise<Apprentice[]> {
+  let q: FirebaseFirestore.Query = col()
+  if (locationId) q = q.where('locationId', '==', locationId)
+  const snap = await q.get()
   return snap.docs.map(d => docData(d) as Apprentice).sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function createApprentice(data: {
   name: string; phone?: string; email?: string
-  mentorId?: string | null; stage: string; startDate: string
+  mentorId?: string | null; locationId?: string | null
+  stage: string; startDate: string
   expectedGraduationDate?: string | null; programDurationMonths?: number | null
   specialtiesLearning?: string; stipend?: number | null; notes?: string
 }): Promise<Apprentice> {
@@ -25,6 +28,11 @@ export async function createApprentice(data: {
   if (parsed.mentorId) {
     const staffDoc = await adminDb.collection('staff').doc(parsed.mentorId).get()
     mentorName = staffDoc.data()?.name ?? null
+  }
+  let locationName: string | null = null
+  if (parsed.locationId) {
+    const locDoc = await adminDb.collection('locations').doc(parsed.locationId).get()
+    locationName = locDoc.data()?.name ?? null
   }
   const skills = (data.specialtiesLearning ?? '').split(',').filter(s => s.trim())
   const skillSignOffs: SkillSignOff[] = skills.map(s => ({
@@ -41,6 +49,8 @@ export async function createApprentice(data: {
     email: data.email || null,
     mentorId: parsed.mentorId ?? null,
     mentorName,
+    locationId: parsed.locationId ?? null,
+    locationName,
     stage: parsed.stage,
     startDate: parsed.startDate,
     expectedGraduationDate: parsed.expectedGraduationDate || null,
@@ -62,11 +72,11 @@ export async function createApprentice(data: {
 
 export async function updateApprentice(id: string, data: {
   name?: string; phone?: string; email?: string
-  mentorId?: string | null; stage?: string; startDate?: string
+  mentorId?: string | null; locationId?: string | null; stage?: string; startDate?: string
   expectedGraduationDate?: string | null; programDurationMonths?: number | null
   specialtiesLearning?: string; stipend?: number | null; notes?: string; status?: string
 }): Promise<Apprentice> {
-  const { status, mentorId, programDurationMonths, specialtiesLearning, ...rest } = data
+  const { status, mentorId, locationId, programDurationMonths, specialtiesLearning, ...rest } = data
   const parsed = ApprenticeSchema.partial().parse(rest)
   let mentorName: string | null | undefined = undefined
   if (mentorId !== undefined) {
@@ -76,13 +86,22 @@ export async function updateApprentice(id: string, data: {
       mentorName = staffDoc.data()?.name ?? null
     }
   }
+  let locationName: string | null | undefined = undefined
+  if (locationId !== undefined) {
+    locationName = null
+    if (locationId) {
+      const locDoc = await adminDb.collection('locations').doc(locationId).get()
+      locationName = locDoc.data()?.name ?? null
+    }
+  }
 
   const updates: Record<string, unknown> = {
     ...parsed,
     updatedAt: new Date().toISOString(),
   }
-  if (status !== undefined)             updates.status = status
-  if (mentorId !== undefined)           { updates.mentorId = mentorId; updates.mentorName = mentorName }
+  if (status !== undefined)               updates.status = status
+  if (mentorId !== undefined)             { updates.mentorId = mentorId; updates.mentorName = mentorName }
+  if (locationId !== undefined)           { updates.locationId = locationId; updates.locationName = locationName }
   if (programDurationMonths !== undefined) updates.programDurationMonths = programDurationMonths
   if (specialtiesLearning !== undefined) {
     updates.specialtiesLearning = specialtiesLearning

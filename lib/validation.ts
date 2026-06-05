@@ -66,6 +66,7 @@ export const ApprenticeSchema = z.object({
   phone:                  phone.optional().or(z.literal('')),
   email:                  z.string().email().optional().or(z.literal('')),
   mentorId:               z.string().max(128).nullable().optional(),
+  locationId:             z.string().max(128).nullable().optional(),
   stage:                  z.enum(['beginner', 'intermediate', 'advanced']),
   startDate:              isoDate,
   expectedGraduationDate: isoDate.nullable().optional().or(z.literal('')),

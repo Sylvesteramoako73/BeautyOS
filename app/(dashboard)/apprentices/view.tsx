@@ -12,6 +12,7 @@ import { formatCurrency, cn } from '@/lib/utils'
 import type { Apprentice, ProgressNote, ApprenticeTask, AttendanceRecord, SkillSignOff } from '@/lib/types'
 import type { Staff } from '@/lib/types'
 import type { Role } from '@/lib/actions/users'
+import type { Location } from '@/lib/actions/locations'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -70,7 +71,7 @@ const ATTEND_BADGE: Record<string, string> = {
 // ── form type ─────────────────────────────────────────────────────────────────
 
 type FormData = {
-  name: string; phone: string; email: string; mentorId: string
+  name: string; phone: string; email: string; mentorId: string; locationId: string
   stage: 'beginner' | 'intermediate' | 'advanced'
   status: 'active' | 'graduated' | 'dropped'
   startDate: string; expectedGraduationDate: string
@@ -78,7 +79,7 @@ type FormData = {
   specialtiesLearning: string; stipend: string; notes: string
 }
 const EMPTY_FORM: FormData = {
-  name: '', phone: '', email: '', mentorId: '',
+  name: '', phone: '', email: '', mentorId: '', locationId: '',
   stage: 'beginner', status: 'active',
   startDate: new Date().toISOString().split('T')[0],
   expectedGraduationDate: '', programDurationMonths: '',
@@ -93,11 +94,13 @@ const EMPTY_TASK: TaskForm = { title: '', description: '', dueDate: '', priority
 interface Props {
   apprentices: Apprentice[]
   staff: Staff[]
+  locations: Location[]
   userRole: Role
   userName: string
+  defaultLocationId?: string | null
 }
 
-export function ApprenticesView({ apprentices: initial, staff, userRole, userName }: Props) {
+export function ApprenticesView({ apprentices: initial, staff, locations, userRole, userName, defaultLocationId }: Props) {
   const [apprentices, setApprentices] = useState(initial)
   const [search, setSearch]           = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'graduated' | 'dropped'>('all')
@@ -163,13 +166,16 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
   // ── add/edit handlers ──────────────────────────────────────────────────────
 
   function openNew() {
-    setEditItem(null); setForm(EMPTY_FORM); setShowForm(true)
+    setEditItem(null)
+    setForm({ ...EMPTY_FORM, locationId: defaultLocationId ?? '' })
+    setShowForm(true)
   }
   function openEdit(a: Apprentice) {
     setEditItem(a)
     setForm({
       name: a.name, phone: a.phone ?? '', email: a.email ?? '',
-      mentorId: a.mentorId ?? '', stage: a.stage, status: a.status,
+      mentorId: a.mentorId ?? '', locationId: a.locationId ?? '',
+      stage: a.stage, status: a.status,
       startDate: a.startDate, expectedGraduationDate: a.expectedGraduationDate ?? '',
       programDurationMonths: a.programDurationMonths != null ? String(a.programDurationMonths) : '',
       specialtiesLearning: a.specialtiesLearning, stipend: a.stipend != null ? String(a.stipend) : '',
@@ -184,7 +190,8 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
     startTransition(async () => {
       const payload = {
         name: form.name, phone: form.phone || undefined, email: form.email || undefined,
-        mentorId: form.mentorId || null, stage: form.stage, status: form.status,
+        mentorId: form.mentorId || null, locationId: form.locationId || null,
+        stage: form.stage, status: form.status,
         startDate: form.startDate, expectedGraduationDate: form.expectedGraduationDate || null,
         programDurationMonths: form.programDurationMonths ? Number(form.programDurationMonths) : null,
         specialtiesLearning: form.specialtiesLearning,
@@ -453,6 +460,9 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <Users className="h-5 w-5 shrink-0" />
                     <span className="truncate">{a.mentorName ?? <span className="italic text-gray-400">No mentor</span>}</span>
+                    {a.locationName && (
+                      <span className="ml-auto badge badge-blue text-[10px] shrink-0">{a.locationName}</span>
+                    )}
                   </div>
 
                   <div className="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
@@ -566,6 +576,20 @@ export function ApprenticesView({ apprentices: initial, staff, userRole, userNam
                     {staff.map(s => <option key={s.id} value={s.id}>{s.name} — {s.role}</option>)}
                   </select>
                 </div>
+                {locations.length > 0 && (
+                  <div>
+                    <label className="form-label">Branch</label>
+                    <select
+                      value={form.locationId}
+                      onChange={e => setForm(f => ({ ...f, locationId: e.target.value }))}
+                      disabled={!!defaultLocationId}
+                      className="form-input w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      <option value="">No branch assigned</option>
+                      {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="form-label">Stage *</label>
                   <select value={form.stage} onChange={e => setForm(f => ({ ...f, stage: e.target.value as FormData['stage'] }))} className="form-input w-full">

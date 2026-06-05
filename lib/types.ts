@@ -164,6 +164,8 @@ export type Apprentice = {
   email: string | null
   mentorId: string | null
   mentorName: string | null
+  locationId: string | null
+  locationName: string | null
   stage: 'beginner' | 'intermediate' | 'advanced'
   status: 'active' | 'graduated' | 'dropped'
   startDate: string
