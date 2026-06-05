@@ -85,7 +85,19 @@ export function AppointmentsView({
   salonSettings?: SalonSettings
   apprentices?: Apprentice[]
 }) {
-  const [appointments, setAppointments] = useState(initial)
+  const STATUS_RANK: Record<string, number> = {
+    'in-progress': 0, confirmed: 1, pending: 2,
+    'no-show': 3, completed: 4, cancelled: 5,
+  }
+  function sortApts(list: Apt[]): Apt[] {
+    return [...list].sort((a, b) => {
+      if (a.date !== b.date)           return a.date.localeCompare(b.date)
+      if (a.startTime !== b.startTime) return a.startTime.localeCompare(b.startTime)
+      return (STATUS_RANK[a.status] ?? 3) - (STATUS_RANK[b.status] ?? 3)
+    })
+  }
+
+  const [appointments, setAppointments] = useState(sortApts(initial))
   const [view, setView]           = useState<'list' | 'calendar'>('list')
   const [weekOffset, setWeekOffset] = useState(0)
   const [statusFilter, setStatusFilter] = useState('all')
@@ -297,7 +309,7 @@ export function AppointmentsView({
         })
       ))
 
-      setAppointments(prev => [...(created as any[]), ...prev])
+      setAppointments(prev => sortApts([...(created as any[]), ...prev]))
       setForm(EMPTY_FORM)
       setShowNew(false)
       setSubmitting(false)
@@ -369,52 +381,72 @@ export function AppointmentsView({
               </tr>
             </thead>
             <tbody>
-              {filtered.map(apt => (
-                <tr key={apt.id}>
-                  <td>
-                    <div className="font-medium text-xs">{apt.date === todayStr ? 'Today' : apt.date}</div>
-                    <div className="text-gray-500 text-xs font-mono">{apt.startTime}</div>
-                  </td>
-                  <td className="font-medium">{apt.client?.name}</td>
-                  <td className="text-gray-600">{apt.services?.map((s: any) => s.service?.name).join(', ') || '—'}</td>
-                  <td className="text-gray-600">
-                    <div>{apt.staff?.name}</div>
-                    {apt.apprenticeName && (
-                      <div className="text-xs text-blue-600 dark:text-blue-400">{apt.apprenticeName} (apprentice)</div>
-                    )}
-                  </td>
-                  <td className="text-gray-500 text-xs">{apt.locationName || apt.room?.name || '—'}</td>
-                  <td>
-                    <span className={`badge ${STATUS_BADGE[apt.status] ?? 'badge-gray'}`}>
-                      {apt.status.replace('-', ' ')}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge ${apt.paymentStatus === 'paid' ? 'badge-green' : apt.paymentStatus === 'partial' ? 'badge-yellow' : 'badge-gray'}`}>
-                      {apt.paymentStatus}
-                    </span>
-                  </td>
-                  <td className="text-right font-medium">{formatCurrency(apt.totalPrice)}</td>
-                  <td>
-                    {updating === apt.id
-                      ? <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-                      : apt.status === 'confirmed' && (
-                        <div className="flex gap-1">
-                          <button onClick={() => handleStatusChange(apt.id, 'in-progress')} className="btn-ghost text-xs h-7 px-2">Start</button>
-                          <button onClick={() => handleStatusChange(apt.id, 'no-show')} className="btn-ghost text-xs h-7 px-2 text-red-500">No-show</button>
-                        </div>
-                      )}
-                    {apt.status === 'in-progress' && !updating && (
-                      <button onClick={() => openPaymentModal(apt)} className="btn-ghost text-xs h-7 px-2 text-green-600">Complete</button>
-                    )}
-                    {apt.status === 'completed' && !updating && (
-                      <button onClick={() => handleDownloadReceipt(apt)} className="btn-ghost h-8 w-8 p-0 justify-center" title="Download receipt">
-                        <FileDown className="h-5 w-5" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {(() => {
+                let lastDate = ''
+                return filtered.flatMap(apt => {
+                  const dateChanged = apt.date !== lastDate
+                  if (dateChanged) lastDate = apt.date
+                  const label = apt.date === todayStr ? 'Today' : apt.date
+                  const done  = apt.status === 'completed' || apt.status === 'cancelled'
+                  const rows = []
+                  if (dateChanged) {
+                    rows.push(
+                      <tr key={`hdr-${apt.date}`} className="pointer-events-none">
+                        <td colSpan={9} className="py-1.5 px-4 bg-gray-50 dark:bg-gray-800/60 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-t border-gray-200 dark:border-gray-700">
+                          {label}
+                        </td>
+                      </tr>
+                    )
+                  }
+                  rows.push(
+                    <tr key={apt.id} className={done ? 'opacity-40' : ''}>
+                      <td>
+                        <div className="font-medium text-xs">{label}</div>
+                        <div className="text-gray-500 text-xs font-mono">{apt.startTime}</div>
+                      </td>
+                      <td className="font-medium">{apt.client?.name}</td>
+                      <td className="text-gray-600">{apt.services?.map((s: any) => s.service?.name).join(', ') || '—'}</td>
+                      <td className="text-gray-600">
+                        <div>{apt.staff?.name}</div>
+                        {apt.apprenticeName && (
+                          <div className="text-xs text-blue-600 dark:text-blue-400">{apt.apprenticeName} (apprentice)</div>
+                        )}
+                      </td>
+                      <td className="text-gray-500 text-xs">{apt.locationName || apt.room?.name || '—'}</td>
+                      <td>
+                        <span className={`badge ${STATUS_BADGE[apt.status] ?? 'badge-gray'}`}>
+                          {apt.status.replace('-', ' ')}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`badge ${apt.paymentStatus === 'paid' ? 'badge-green' : apt.paymentStatus === 'partial' ? 'badge-yellow' : 'badge-gray'}`}>
+                          {apt.paymentStatus}
+                        </span>
+                      </td>
+                      <td className="text-right font-medium">{formatCurrency(apt.totalPrice)}</td>
+                      <td>
+                        {updating === apt.id
+                          ? <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                          : apt.status === 'confirmed' && (
+                            <div className="flex gap-1">
+                              <button onClick={() => handleStatusChange(apt.id, 'in-progress')} className="btn-ghost text-xs h-7 px-2">Start</button>
+                              <button onClick={() => handleStatusChange(apt.id, 'no-show')} className="btn-ghost text-xs h-7 px-2 text-red-500">No-show</button>
+                            </div>
+                          )}
+                        {apt.status === 'in-progress' && !updating && (
+                          <button onClick={() => openPaymentModal(apt)} className="btn-ghost text-xs h-7 px-2 text-green-600">Complete</button>
+                        )}
+                        {apt.status === 'completed' && !updating && (
+                          <button onClick={() => handleDownloadReceipt(apt)} className="btn-ghost h-8 w-8 p-0 justify-center" title="Download receipt">
+                            <FileDown className="h-5 w-5" />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                  return rows
+                })
+              })()}
             </tbody>
           </table>
           {filtered.length === 0 && (
