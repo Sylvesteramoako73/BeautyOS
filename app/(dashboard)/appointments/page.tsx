@@ -4,18 +4,20 @@ import { getStaff } from '@/lib/actions/staff'
 import { getServices } from '@/lib/actions/services'
 import { getLocations } from '@/lib/actions/locations'
 import { getSalonSettings } from '@/lib/actions/settings'
+import { getApprentices } from '@/lib/actions/apprentices'
 import { getEffectiveLocationId } from '@/lib/auth'
 import { AppointmentsView } from './view'
 
 export default async function AppointmentsPage() {
   const activeLocationId = await getEffectiveLocationId() ?? undefined
-  const [appointments, clients, staff, services, locations, salonSettings] = await Promise.all([
+  const [appointments, clients, staff, services, locations, salonSettings, apprentices] = await Promise.all([
     getAppointments(activeLocationId ? { locationId: activeLocationId } : undefined),
     getClients(),
     getStaff(),
     getServices(),
     getLocations(),
     getSalonSettings(),
+    getApprentices(activeLocationId),
   ])
   return (
     <AppointmentsView
@@ -25,6 +27,7 @@ export default async function AppointmentsPage() {
       services={services}
       locations={locations}
       salonSettings={salonSettings}
+      apprentices={apprentices}
     />
   )
 }

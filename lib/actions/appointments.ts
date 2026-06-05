@@ -49,7 +49,8 @@ export async function getTodayAppointments(locationId?: string | null): Promise<
 }
 
 export async function createAppointment(data: {
-  clientId: string; staffId: string; roomId?: string; locationId?: string | null
+  clientId: string; staffId: string; apprenticeId?: string | null
+  roomId?: string; locationId?: string | null
   date: string; startTime: string; endTime: string
   duration: number; totalPrice: number; serviceIds: string[]; notes?: string
 }): Promise<Appointment> {
@@ -76,6 +77,11 @@ export async function createAppointment(data: {
     const locDoc = await adminDb.collection('locations').doc(parsed.locationId).get()
     locationName = locDoc.data()?.name ?? null
   }
+  let apprenticeName: string | null = null
+  if (parsed.apprenticeId) {
+    const apprDoc = await adminDb.collection('apprentices').doc(parsed.apprenticeId).get()
+    apprenticeName = apprDoc.data()?.name ?? null
+  }
 
   const now = new Date().toISOString()
   const ref = col().doc()
@@ -88,14 +94,16 @@ export async function createAppointment(data: {
   }))
 
   const doc = {
-    clientId:     parsed.clientId,
-    clientName:   clientData.name,
-    clientPhone:  clientData.phone,
-    staffId:      parsed.staffId,
-    staffName:    staffData.name,
-    roomId:       parsed.roomId ?? null,
+    clientId:       parsed.clientId,
+    clientName:     clientData.name,
+    clientPhone:    clientData.phone,
+    staffId:        parsed.staffId,
+    staffName:      staffData.name,
+    apprenticeId:   parsed.apprenticeId ?? null,
+    apprenticeName,
+    roomId:         parsed.roomId ?? null,
     roomName,
-    locationId:   parsed.locationId ?? null,
+    locationId:     parsed.locationId ?? null,
     locationName,
     date:         parsed.date,
     startTime:    parsed.startTime,

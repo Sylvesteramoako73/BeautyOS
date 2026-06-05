@@ -3,7 +3,7 @@ import { useState, useTransition } from 'react'
 import { Plus, ChevronLeft, ChevronRight, Search, Loader2, X, Check, Download, FileDown } from 'lucide-react'
 import { updateAppointmentStatus, createAppointment, recordAppointmentPayment } from '@/lib/actions/appointments'
 import { formatCurrency, cn } from '@/lib/utils'
-import type { Client, Staff, Service } from '@/lib/types'
+import type { Client, Staff, Service, Apprentice } from '@/lib/types'
 import type { Location } from '@/lib/actions/locations'
 import type { SalonSettings } from '@/lib/actions/settings'
 
@@ -33,9 +33,10 @@ const STATUS_BADGE: Record<string, string> = {
 }
 
 const EMPTY_FORM = {
-  clientId:   '',
-  staffId:    '',
-  locationId: '',
+  clientId:     '',
+  staffId:      '',
+  apprenticeId: '',
+  locationId:   '',
   date:       new Date().toISOString().split('T')[0],
   startTime:  '09:00',
   notes:      '',
@@ -74,6 +75,7 @@ export function AppointmentsView({
   services,
   locations,
   salonSettings,
+  apprentices = [],
 }: {
   appointments: Apt[]
   clients: Client[]
@@ -81,6 +83,7 @@ export function AppointmentsView({
   services: Service[]
   locations: Location[]
   salonSettings?: SalonSettings
+  apprentices?: Apprentice[]
 }) {
   const [appointments, setAppointments] = useState(initial)
   const [view, setView]           = useState<'list' | 'calendar'>('list')
@@ -280,16 +283,17 @@ export function AppointmentsView({
 
       const created = await Promise.all(dates.map(date =>
         createAppointment({
-          clientId:   form.clientId,
-          staffId:    form.staffId,
-          locationId: form.locationId || null,
+          clientId:     form.clientId,
+          staffId:      form.staffId,
+          apprenticeId: form.apprenticeId || null,
+          locationId:   form.locationId || null,
           date,
-          startTime:  form.startTime,
+          startTime:    form.startTime,
           endTime,
           duration,
           totalPrice,
-          serviceIds: form.serviceIds,
-          notes:      form.notes || undefined,
+          serviceIds:   form.serviceIds,
+          notes:        form.notes || undefined,
         })
       ))
 
@@ -373,7 +377,12 @@ export function AppointmentsView({
                   </td>
                   <td className="font-medium">{apt.client?.name}</td>
                   <td className="text-gray-600">{apt.services?.map((s: any) => s.service?.name).join(', ') || '—'}</td>
-                  <td className="text-gray-600">{apt.staff?.name}</td>
+                  <td className="text-gray-600">
+                    <div>{apt.staff?.name}</div>
+                    {apt.apprenticeName && (
+                      <div className="text-xs text-blue-600 dark:text-blue-400">{apt.apprenticeName} (apprentice)</div>
+                    )}
+                  </td>
                   <td className="text-gray-500 text-xs">{apt.locationName || apt.room?.name || '—'}</td>
                   <td>
                     <span className={`badge ${STATUS_BADGE[apt.status] ?? 'badge-gray'}`}>
@@ -527,6 +536,24 @@ export function AppointmentsView({
                     ).map(s => <option key={s.id} value={s.id}>{s.name} — {s.role}</option>)}
                   </select>
                 </div>
+                {apprentices.length > 0 && (
+                  <div>
+                    <label className="form-label">Apprentice <span className="text-gray-400 font-normal">(optional)</span></label>
+                    <select
+                      value={form.apprenticeId}
+                      onChange={e => setForm(f => ({ ...f, apprenticeId: e.target.value }))}
+                      className="form-input w-full"
+                    >
+                      <option value="">No apprentice</option>
+                      {(form.locationId
+                        ? apprentices.filter(a => !a.locationId || a.locationId === form.locationId)
+                        : apprentices
+                      ).filter(a => a.status === 'active').map(a => (
+                        <option key={a.id} value={a.id}>{a.name} — {a.stage}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="form-label">Date *</label>
                   <input

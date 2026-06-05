@@ -34,17 +34,18 @@ export const StaffSchema = z.object({
 })
 
 export const AppointmentSchema = z.object({
-  clientId:   z.string().min(1).max(128),
-  staffId:    z.string().min(1).max(128),
-  roomId:     z.string().max(128).optional(),
-  locationId: z.string().max(128).nullable().optional(),
-  date:       isoDate,
-  startTime:  time24,
-  endTime:    time24,
-  duration:   z.number().int().min(1).max(480),
-  totalPrice: z.number().min(0).max(100_000),
-  serviceIds: z.array(z.string().min(1).max(128)).min(1).max(20),
-  notes:      z.string().max(1000).optional(),
+  clientId:     z.string().min(1).max(128),
+  staffId:      z.string().min(1).max(128),
+  apprenticeId: z.string().max(128).nullable().optional(),
+  roomId:       z.string().max(128).optional(),
+  locationId:   z.string().max(128).nullable().optional(),
+  date:         isoDate,
+  startTime:    time24,
+  endTime:      time24,
+  duration:     z.number().int().min(1).max(480),
+  totalPrice:   z.number().min(0).max(100_000),
+  serviceIds:   z.array(z.string().min(1).max(128)).min(1).max(20),
+  notes:        z.string().max(1000).optional(),
 })
 
 export const ExpenseSchema = z.object({

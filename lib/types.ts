@@ -76,6 +76,8 @@ export type Appointment = {
   clientPhone: string
   staffId: string
   staffName: string
+  apprenticeId: string | null
+  apprenticeName: string | null
   roomId: string | null
   roomName: string | null
   locationId: string | null
