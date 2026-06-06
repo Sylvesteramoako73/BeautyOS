@@ -31,15 +31,15 @@ export async function POST(req: NextRequest) {
 
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn: SESSION_DURATION })
 
-    cookies().set('session', sessionCookie, {
+    const response = NextResponse.json({ status: 'ok' })
+    response.cookies.set('session', sessionCookie, {
       maxAge:   SESSION_DURATION / 1000,
       httpOnly: true,
       secure:   process.env.NODE_ENV === 'production',
       path:     '/',
       sameSite: 'lax',
     })
-
-    return NextResponse.json({ status: 'ok' })
+    return response
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 401 })
   }

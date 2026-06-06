@@ -10,7 +10,7 @@ export const getSessionUser = cache(async () => {
   if (!sessionCookie) return null
 
   try {
-    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true)
+    const decoded = await adminAuth.verifySessionCookie(sessionCookie, false)
     const doc     = await adminDb.collection('users').doc(decoded.uid).get()
     const role       = (doc.data()?.role as Role) ?? 'staff'
     const email      = decoded.email ?? null
@@ -26,7 +26,8 @@ export const getSessionUser = cache(async () => {
       locationId,
       tenantId: (doc.data()?.tenantId as string | null) ?? null,
     }
-  } catch {
+  } catch (err) {
+    console.error('[getSessionUser] session verification failed:', err)
     return null
   }
 })
@@ -49,7 +50,7 @@ export async function getEffectiveLocationId(): Promise<string | null> {
 
 export async function requireRole(...allowed: Role[]) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  if (!user) redirect('/api/auth/session')
   if (!allowed.includes(user.role)) redirect('/')
   return user
 }
