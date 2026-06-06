@@ -45,6 +45,14 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function GET(req: NextRequest) {
+  // Called by the dashboard layout when the session cookie exists but is invalid/expired.
+  // Clears the stale cookie so middleware won't redirect-loop back to the dashboard.
+  const res = NextResponse.redirect(new URL('/login', req.url))
+  res.cookies.set('session', '', { maxAge: 0, path: '/' })
+  return res
+}
+
 export async function DELETE() {
   cookies().set('session', '', { maxAge: 0, path: '/' })
   return NextResponse.json({ status: 'ok' })

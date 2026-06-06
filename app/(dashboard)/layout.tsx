@@ -11,7 +11,10 @@ import { LocationProvider } from '@/components/location-provider'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser()
-  if (!user) redirect('/login')
+  // Redirect via /api/auth/session (GET) so it clears the stale cookie first.
+  // A direct redirect('/login') would leave the cookie set, causing middleware to
+  // bounce back here in a redirect loop.
+  if (!user) redirect('/api/auth/session')
 
   const [locations, tenant] = await Promise.all([
     getLocations(),
