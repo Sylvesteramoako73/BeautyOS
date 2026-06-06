@@ -11,20 +11,39 @@ export const getSessionUser = cache(async () => {
 
   try {
     const decoded = await adminAuth.verifySessionCookie(sessionCookie, false)
-    const doc     = await adminDb.collection('users').doc(decoded.uid).get()
-    const role       = (doc.data()?.role as Role) ?? 'staff'
-    const email      = decoded.email ?? null
-    const locationId = role === 'owner'
-      ? null
-      : (doc.data()?.locationId as string | null) ?? null
+    const email = decoded.email ?? null
+
+    // Custom claims — baked into the session cookie during login.
+    // When present, no Firestore read is needed per page load.
+    const claimRole     = decoded['role']       as Role | undefined
+    const claimTenantId = decoded['tenantId']   as string | null | undefined
+    const claimLocId    = decoded['locationId'] as string | null | undefined
+
+    if (claimRole) {
+      return {
+        uid:        decoded.uid,
+        name:       decoded.name ?? email?.split('@')[0] ?? 'User',
+        email,
+        role:       claimRole,
+        locationId: claimRole === 'owner' ? null : (claimLocId ?? null),
+        tenantId:   claimTenantId ?? null,
+      }
+    }
+
+    // Firestore fallback — for sessions created before custom claims were introduced.
+    const doc  = await adminDb.collection('users').doc(decoded.uid).get()
+    if (!doc.exists) return null
+    const data = doc.data()!
+    const role = (data.role as Role) ?? 'staff'
+    const locationId = role === 'owner' ? null : (data.locationId as string | null) ?? null
 
     return {
-      uid:      decoded.uid,
-      name:     doc.data()?.name ?? decoded.name ?? email?.split('@')[0] ?? 'User',
+      uid:        decoded.uid,
+      name:       data.name ?? decoded.name ?? email?.split('@')[0] ?? 'User',
       email,
       role,
       locationId,
-      tenantId: (doc.data()?.tenantId as string | null) ?? null,
+      tenantId:   (data.tenantId as string | null) ?? null,
     }
   } catch (err) {
     console.error('[getSessionUser] session verification failed:', err)

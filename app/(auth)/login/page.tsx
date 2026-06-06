@@ -22,11 +22,24 @@ export default function LoginPage() {
 
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password)
-      const idToken    = await credential.user.getIdToken()
-      const res        = await fetch('/api/auth/session', {
+
+      // Bake role/tenantId/locationId into Firebase custom claims (reads Firestore once).
+      // This lets subsequent page loads verify the session without any Firestore reads.
+      const initialToken = await credential.user.getIdToken()
+      await fetch('/api/auth/claims', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ idToken }),
+        body:    JSON.stringify({ idToken: initialToken }),
+      })
+
+      // Force-refresh so the new custom claims are included in the next token.
+      const freshToken = await credential.user.getIdToken(true)
+
+      // Create the session cookie from the fresh token (claims are now baked in).
+      const res = await fetch('/api/auth/session', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ idToken: freshToken }),
       })
       if (!res.ok) throw new Error('Session creation failed')
       router.push('/')
