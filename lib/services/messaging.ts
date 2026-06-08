@@ -35,9 +35,35 @@ async function sendSMS(to: string, body: string): Promise<SendResult> {
   }
 }
 
+// ── WhatsApp via Railway (Baileys) ────────────────────────────────────────────
+
+async function sendWhatsAppViaRailway(to: string, body: string): Promise<SendResult> {
+  const baseUrl   = process.env.RAILWAY_WHATSAPP_URL
+  const sessionId = process.env.RAILWAY_WHATSAPP_SESSION ?? 'default'
+  if (!baseUrl) return { success: false, error: 'RAILWAY_WHATSAPP_URL not set' }
+
+  try {
+    const res = await fetch(`${baseUrl}/api/whatsapp/send`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, number: to, message: body }),
+    })
+    const data = await res.json() as any
+    if (!res.ok || !data.ok) return { success: false, error: data.error ?? 'Railway WA error' }
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err.message }
+  }
+}
+
 // ── WhatsApp via Meta Cloud API ───────────────────────────────────────────────
 
 async function sendWhatsApp(to: string, body: string): Promise<SendResult> {
+  // Prefer Railway (Baileys) if configured
+  if (process.env.RAILWAY_WHATSAPP_URL) {
+    return sendWhatsAppViaRailway(to, body)
+  }
+
   const phoneNumberId = process.env.META_WHATSAPP_PHONE_NUMBER_ID
   const accessToken   = process.env.META_WHATSAPP_ACCESS_TOKEN
 
