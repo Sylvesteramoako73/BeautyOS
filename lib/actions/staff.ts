@@ -14,7 +14,7 @@ export async function getStaff(locationId?: string | null): Promise<Staff[]> {
   return snap.docs
     .map(d => docData(d) as Staff)
     .filter(s => s.isActive)
-    .filter(s => !locationId || s.locationId === locationId)
+    .filter(s => !locationId || !s.locationId || s.locationId === locationId)
     .sort((a, b) => a.name.localeCompare(b.name))
 }
 
