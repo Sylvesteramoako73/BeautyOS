@@ -119,12 +119,10 @@ export function AppointmentsView({
 
   const todayStr     = new Date().toISOString().split('T')[0]
   const yesterdayStr = new Date(Date.now() - 864e5).toISOString().split('T')[0]
-  const twoDaysAgoStr = new Date(Date.now() - 2 * 864e5).toISOString().split('T')[0]
 
   function dateLabel(dateStr: string) {
-    if (dateStr === todayStr)      return 'Today'
-    if (dateStr === yesterdayStr)  return 'Yesterday'
-    if (dateStr === twoDaysAgoStr) return 'Day Before Yesterday'
+    if (dateStr === todayStr)     return 'Today'
+    if (dateStr === yesterdayStr) return 'Yesterday'
     return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GH', { weekday: 'long', day: 'numeric', month: 'long' })
   }
 
