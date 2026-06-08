@@ -38,12 +38,14 @@ async function alreadySent(automationId: string, appointmentId?: string | null, 
 }
 
 async function logResult(data: {
-  automationId: string; appointmentId?: string | null; clientId?: string | null
+  automationId: string; tenantId?: string | null
+  appointmentId?: string | null; clientId?: string | null
   recipient: string; message: string; channel: string; status: string; error?: string
 }) {
   const now = new Date().toISOString()
   await adminDb.collection('automationLogs').add({
     ...data,
+    tenantId:      data.tenantId ?? null,
     appointmentId: data.appointmentId ?? null,
     clientId:      data.clientId ?? null,
     sentAt:        data.status === 'sent' ? now : null,
@@ -57,11 +59,11 @@ async function processBeforeAppointment(auto: any): Promise<ProcessResult> {
   const now      = Date.now()
   const today    = new Date().toISOString().split('T')[0]
 
-  // Single where on date
   const snap = await adminDb.collection('appointments').where('date', '==', today).get()
 
   for (const doc of snap.docs) {
     const appt = { id: doc.id, ...doc.data() } as any
+    if (appt.tenantId !== auto.tenantId) continue
     if (appt.status !== 'confirmed') continue
     result.processed++
     const [h, m] = appt.startTime.split(':').map(Number)
@@ -74,7 +76,7 @@ async function processBeforeAppointment(auto: any): Promise<ProcessResult> {
       const recipient = auto.channel === 'email' ? appt.clientEmail : appt.clientPhone
       if (!recipient) { result.skipped++; continue }
       const send = await sendMessage(auto.channel, recipient, message, 'Appointment Reminder')
-      await logResult({ automationId: auto.id, appointmentId: appt.id, clientId: appt.clientId, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+      await logResult({ automationId: auto.id, tenantId: auto.tenantId, appointmentId: appt.id, clientId: appt.clientId, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
       send.success ? result.sent++ : result.failed++
     } else { result.skipped++ }
   }
@@ -92,6 +94,7 @@ async function processAfterAppointment(auto: any): Promise<ProcessResult> {
 
   for (const doc of snap.docs) {
     const appt = { id: doc.id, ...doc.data() } as any
+    if (appt.tenantId !== auto.tenantId) continue
     if (appt.status !== (cond.status ?? 'completed')) continue
     result.processed++
     const elapsed = now - new Date(appt.updatedAt).getTime()
@@ -101,7 +104,7 @@ async function processAfterAppointment(auto: any): Promise<ProcessResult> {
       const recipient = auto.channel === 'email' ? appt.clientEmail : appt.clientPhone
       if (!recipient) { result.skipped++; continue }
       const send = await sendMessage(auto.channel, recipient, message, 'Thank you for your visit')
-      await logResult({ automationId: auto.id, appointmentId: appt.id, clientId: appt.clientId, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+      await logResult({ automationId: auto.id, tenantId: auto.tenantId, appointmentId: appt.id, clientId: appt.clientId, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
       send.success ? result.sent++ : result.failed++
     } else { result.skipped++ }
   }
@@ -118,6 +121,7 @@ async function processBirthday(auto: any): Promise<ProcessResult> {
   const snap = await adminDb.collection('clients').where('isActive', '==', true).get()
   for (const doc of snap.docs) {
     const client = { id: doc.id, ...doc.data() } as any
+    if (client.tenantId !== auto.tenantId) continue
     if (!client.dateOfBirth) { result.skipped++; continue }
     result.processed++
     const dob = new Date(client.dateOfBirth)
@@ -127,7 +131,7 @@ async function processBirthday(auto: any): Promise<ProcessResult> {
     const recipient = auto.channel === 'email' ? client.email : client.phone
     if (!recipient) { result.skipped++; continue }
     const send = await sendMessage(auto.channel, recipient, message, 'Happy Birthday!')
-    await logResult({ automationId: auto.id, clientId: client.id, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+    await logResult({ automationId: auto.id, tenantId: auto.tenantId, clientId: client.id, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
     send.success ? result.sent++ : result.failed++
   }
   return result
@@ -142,6 +146,7 @@ async function processNoVisit(auto: any): Promise<ProcessResult> {
   const snap = await adminDb.collection('clients').where('isActive', '==', true).get()
   for (const doc of snap.docs) {
     const client = { id: doc.id, ...doc.data() } as any
+    if (client.tenantId !== auto.tenantId) continue
     if (!client.lastVisitAt || client.lastVisitAt >= cutoff) continue
     result.processed++
     if (await alreadySent(auto.id, null, client.id)) { result.skipped++; continue }
@@ -149,7 +154,7 @@ async function processNoVisit(auto: any): Promise<ProcessResult> {
     const recipient = auto.channel === 'email' ? client.email : client.phone
     if (!recipient) { result.skipped++; continue }
     const send = await sendMessage(auto.channel, recipient, message, 'We miss you!')
-    await logResult({ automationId: auto.id, clientId: client.id, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+    await logResult({ automationId: auto.id, tenantId: auto.tenantId, clientId: client.id, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
     send.success ? result.sent++ : result.failed++
   }
   return result
@@ -164,6 +169,7 @@ async function processNoShow(auto: any): Promise<ProcessResult> {
   const snap = await adminDb.collection('appointments').where('date', '>=', cutoff).get()
   for (const doc of snap.docs) {
     const appt = { id: doc.id, ...doc.data() } as any
+    if (appt.tenantId !== auto.tenantId) continue
     if (appt.status !== 'no-show') continue
     result.processed++
     const elapsed = now - new Date(appt.updatedAt).getTime()
@@ -173,7 +179,7 @@ async function processNoShow(auto: any): Promise<ProcessResult> {
       const recipient = auto.channel === 'email' ? appt.clientEmail : appt.clientPhone
       if (!recipient) { result.skipped++; continue }
       const send = await sendMessage(auto.channel, recipient, message, 'We missed you today')
-      await logResult({ automationId: auto.id, appointmentId: appt.id, clientId: appt.clientId, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+      await logResult({ automationId: auto.id, tenantId: auto.tenantId, appointmentId: appt.id, clientId: appt.clientId, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
       send.success ? result.sent++ : result.failed++
     } else { result.skipped++ }
   }
@@ -219,6 +225,7 @@ async function processNewClient(auto: any): Promise<ProcessResult> {
   const snap = await adminDb.collection('clients').where('isActive', '==', true).get()
   for (const doc of snap.docs) {
     const client = { id: doc.id, ...doc.data() } as any
+    if (client.tenantId !== auto.tenantId) continue
     if (!client.createdAt || client.createdAt < cutoff) continue
     result.processed++
     if (await alreadySent(auto.id, null, client.id)) { result.skipped++; continue }
@@ -233,7 +240,7 @@ async function processNewClient(auto: any): Promise<ProcessResult> {
     const recipient = auto.channel === 'email' ? client.email : client.phone
     if (!recipient) { result.skipped++; continue }
     const send = await sendMessage(auto.channel, recipient, message, `Welcome to ${auto.name}`)
-    await logResult({ automationId: auto.id, clientId: client.id, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+    await logResult({ automationId: auto.id, tenantId: auto.tenantId, clientId: client.id, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
     send.success ? result.sent++ : result.failed++
   }
   return result
@@ -248,6 +255,7 @@ async function processReviewRequest(auto: any): Promise<ProcessResult> {
   const snap = await adminDb.collection('appointments').where('date', '>=', cutoff).get()
   for (const doc of snap.docs) {
     const appt = { id: doc.id, ...doc.data() } as any
+    if (appt.tenantId !== auto.tenantId) continue
     if (appt.status !== 'completed') continue
     result.processed++
     const elapsed = now - new Date(appt.updatedAt).getTime()
@@ -257,7 +265,7 @@ async function processReviewRequest(auto: any): Promise<ProcessResult> {
       const recipient = auto.channel === 'email' ? appt.clientEmail : appt.clientPhone
       if (!recipient) { result.skipped++; continue }
       const send = await sendMessage(auto.channel, recipient, message, 'How was your visit?')
-      await logResult({ automationId: auto.id, appointmentId: appt.id, clientId: appt.clientId, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
+      await logResult({ automationId: auto.id, tenantId: auto.tenantId, appointmentId: appt.id, clientId: appt.clientId, recipient, message, channel: auto.channel, status: send.success ? 'sent' : 'failed', error: send.error })
       send.success ? result.sent++ : result.failed++
     } else { result.skipped++ }
   }
