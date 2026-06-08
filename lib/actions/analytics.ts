@@ -8,7 +8,7 @@ export async function getAnalyticsData(period: 'week' | 'month' = 'week', locati
   const days = period === 'week' ? 7 : 30
 
   const monthStart     = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-  const lastMonthStart = new Date(now.getFullYear(), now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0]
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0]
   const lastMonthEnd   = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
 
   const startDate = (() => {
@@ -20,31 +20,28 @@ export async function getAnalyticsData(period: 'week' | 'month' = 'week', locati
     kpis: { monthlyRevenue: 0, monthlyGrowth: 0, totalBookings: 0, newClients: 0, newClientsGrowth: 0, completionRate: 0 },
   }
 
-  const aptsBase     = adminDb.collection('appointments').where('tenantId', '==', tenantId)
-  const clientsBase  = adminDb.collection('clients').where('tenantId', '==', tenantId)
-  const servicesBase = adminDb.collection('services').where('tenantId', '==', tenantId)
-  const invoicesBase = adminDb.collection('invoices').where('tenantId', '==', tenantId)
-
   // Single-field where queries only — no composite indexes needed
-  const [periodSnap, monthSnap, lastMonthSnap, newClientsSnap, allClientsSnap, servicesSnap, invoicesSnap] = await Promise.all([
-    aptsBase.where('date', '>=', startDate).get(),
-    aptsBase.where('date', '>=', monthStart).get(),
-    aptsBase.where('date', '>=', lastMonthStart).get(),
-    clientsBase.where('createdAt', '>=', new Date(monthStart).toISOString()).get(),
-    clientsBase.where('createdAt', '>=', new Date(lastMonthStart).toISOString()).get(),
-    servicesBase.where('isActive', '==', true).get(),
-    invoicesBase.where('status', '==', 'paid').get(),
+  const [aptsSnap, clientsSnap, servicesSnap, invoicesSnap] = await Promise.all([
+    adminDb.collection('appointments').where('tenantId', '==', tenantId).get(),
+    adminDb.collection('clients').where('tenantId', '==', tenantId).get(),
+    adminDb.collection('services').where('tenantId', '==', tenantId).get(),
+    adminDb.collection('invoices').where('tenantId', '==', tenantId).get(),
   ])
 
   const loc = (a: any) => !locationId || a.locationId === locationId
 
-  const periodApts    = periodSnap.docs.map(d => ({ id: d.id, ...d.data() } as any)).filter(loc)
-  const monthApts     = monthSnap.docs.map(d => d.data() as any).filter(loc)
-  const lastMonthApts = lastMonthSnap.docs.map(d => d.data() as any).filter(a => a.date < lastMonthEnd).filter(loc)
-  const newClients    = newClientsSnap.size
-  const lastNewClients = allClientsSnap.docs.filter(d => {
-    const c = d.data(); return c.createdAt >= new Date(lastMonthStart).toISOString() && c.createdAt < new Date(lastMonthEnd).toISOString()
-  }).length
+  // In-memory date filtering
+  const allApts       = aptsSnap.docs.map(d => ({ id: d.id, ...d.data() } as any))
+  const periodApts    = allApts.filter(a => a.date >= startDate).filter(loc)
+  const monthApts     = allApts.filter(a => a.date >= monthStart).filter(loc)
+  const lastMonthApts = allApts.filter(a => a.date >= lastMonthStart && a.date < lastMonthEnd).filter(loc)
+
+  // Clients — in-memory date filtering
+  const allClients     = clientsSnap.docs.map(d => ({ id: d.id, ...d.data() } as any))
+  const newClients     = allClients.filter(c => c.createdAt >= new Date(monthStart).toISOString()).length
+  const lastNewClients = allClients.filter(c =>
+    c.createdAt >= new Date(lastMonthStart).toISOString() && c.createdAt < new Date(lastMonthEnd).toISOString()
+  ).length
 
   // Revenue by day
   const revenueTrend = Array.from({ length: days }, (_, i) => {
@@ -62,8 +59,8 @@ export async function getAnalyticsData(period: 'week' | 'month' = 'week', locati
     }
   })
 
-  // Service breakdown by category — filter services in memory
-  const allServices = servicesSnap.docs.map(d => ({ id: d.id, ...d.data() } as any))
+  // Service breakdown by category
+  const allServices = servicesSnap.docs.map(d => ({ id: d.id, ...d.data() } as any)).filter((s: any) => s.isActive)
   const categories  = ['Hair', 'Nails', 'Skin & Spa', 'Brows & Lashes', 'Packages']
   const activeApts  = monthApts.filter((a: any) => a.status !== 'cancelled')
 
@@ -86,8 +83,9 @@ export async function getAnalyticsData(period: 'week' | 'month' = 'week', locati
     .map(sb => ({ ...sb, percentage: totalCatRevenue > 0 ? Math.round(sb.revenue / totalCatRevenue * 100) : 0 }))
     .sort((a, b) => b.revenue - a.revenue)
 
-  // Payment methods — filter invoices in memory
-  const monthInvoices = invoicesSnap.docs.map(d => d.data()).filter(inv => inv.createdAt >= new Date(monthStart).toISOString())
+  // Payment methods — in-memory filter
+  const allInvoices   = invoicesSnap.docs.map(d => d.data())
+  const monthInvoices = allInvoices.filter(inv => inv.status === 'paid' && inv.createdAt >= new Date(monthStart).toISOString())
   const pmCounts: Record<string, number> = {}
   for (const inv of monthInvoices) {
     const m = inv.paymentMethod ?? 'cash'
@@ -110,10 +108,9 @@ export async function getAnalyticsData(period: 'week' | 'month' = 'week', locati
   const completionRate   = nonCancelled.length > 0 ? Math.round(completed.length / nonCancelled.length * 100) : 0
   const newClientsGrowth = lastNewClients > 0 ? parseFloat(((newClients - lastNewClients) / lastNewClients * 100).toFixed(1)) : 0
 
-  // Per-location revenue (always all locations, for the breakdown chart)
-  const allMonthApts = monthSnap.docs.map(d => d.data() as any)
-  const locationMap  = new Map<string, { name: string; revenue: number; bookings: number }>()
-  for (const apt of allMonthApts) {
+  // Per-location revenue
+  const locationMap = new Map<string, { name: string; revenue: number; bookings: number }>()
+  for (const apt of allApts.filter(a => a.date >= monthStart)) {
     if (!apt.locationId || !apt.locationName) continue
     const entry = locationMap.get(apt.locationId) ?? { name: apt.locationName, revenue: 0, bookings: 0 }
     if (apt.status !== 'cancelled') entry.bookings++
