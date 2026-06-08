@@ -47,12 +47,14 @@ async function sendWhatsAppViaRailway(to: string, body: string): Promise<SendRes
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId, number: to, message: body }),
+      signal:  AbortSignal.timeout(8000),
     })
     const data = await res.json() as any
     if (!res.ok || !data.ok) return { success: false, error: data.error ?? 'Railway WA error' }
     return { success: true }
   } catch (err: any) {
-    return { success: false, error: err.message }
+    const msg = err.name === 'TimeoutError' ? 'WhatsApp service timed out — check Railway connection' : err.message
+    return { success: false, error: msg }
   }
 }
 

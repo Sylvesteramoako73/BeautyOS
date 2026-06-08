@@ -169,8 +169,9 @@ export function AutomationsView({ automations: initial }: { automations: Automat
     setRunningId(id)
     setRunResult(null)
     try {
-      const result = await runAutomationManually(id)
-      const r = result.find((x: any) => x.automationId === id)
+      const res = await fetch(`/api/automations/${id}/run`, { method: 'POST' })
+      const data = await res.json()
+      const r = data.result
       setRunResult(r ? `Sent: ${r.sent} · Skipped: ${r.skipped} · Failed: ${r.failed}` : 'No matching triggers found right now.')
     } catch (err: any) {
       setRunResult(`Error: ${err?.message ?? 'Unknown error'}`)
