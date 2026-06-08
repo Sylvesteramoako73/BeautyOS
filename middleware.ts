@@ -19,12 +19,11 @@ export function middleware(req: NextRequest) {
   // API routes — let through (they do their own auth)
   if (pathname.startsWith('/api')) return NextResponse.next()
 
-  // Subdomain detection — only on our production domain, never on vercel.app
-  // e.g. hairport.beautyos.app → slug = "hairport"
+  // Subdomain detection — production domains only, never on vercel.app
+  // e.g. hairport.beautyhubapp.online or hairport.beautyos.app → slug = "hairport"
   const isProductionSubdomain =
-    hostname.endsWith('.beautyos.app') &&
-    hostname !== 'beautyos.app' &&
-    hostname !== 'www.beautyos.app'
+    (hostname.endsWith('.beautyhubapp.online') && hostname !== 'beautyhubapp.online' && hostname !== 'www.beautyhubapp.online') ||
+    (hostname.endsWith('.beautyos.app')        && hostname !== 'beautyos.app'        && hostname !== 'www.beautyos.app')
   if (isProductionSubdomain) {
     const slug = hostname.split('.')[0]
     const res  = NextResponse.next()
