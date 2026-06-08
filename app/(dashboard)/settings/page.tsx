@@ -2,7 +2,7 @@
 // Server-side role guard is in lib/auth.ts — this page is rendered client-side
 // so we rely on the sidebar hiding the link + the API returning 403 for non-owners
 import { useState, useEffect } from 'react'
-import { Check, Loader2, Eye, EyeOff, Shield, Crown, User, MessageSquare, CheckCircle, XCircle, CalendarDays, Link2, Unlink } from 'lucide-react'
+import { Check, Loader2, Eye, EyeOff, Shield, Crown, User, MessageSquare, CheckCircle, XCircle, CalendarDays, Link2, Unlink, Smartphone, Wifi, WifiOff } from 'lucide-react'
 import {
   updateProfile, updatePassword,
   EmailAuthProvider, reauthenticateWithCredential,
@@ -170,6 +170,97 @@ function GoogleCalendarSection() {
       </div>
       <button onClick={connect} className="btn-primary">
         <Link2 className="h-5 w-5" /> Connect Google Calendar
+      </button>
+    </div>
+  )
+}
+
+function WhatsAppSection() {
+  const [status, setStatus]   = useState<'loading' | 'unconfigured' | 'disconnected' | 'connecting' | 'qr' | 'connected'>('loading')
+  const [qr, setQr]           = useState<string | null>(null)
+  const [phone, setPhone]     = useState<string | null>(null)
+  const [working, setWorking] = useState(false)
+
+  async function fetchStatus() {
+    try {
+      const res  = await fetch('/api/whatsapp/status')
+      const data = await res.json()
+      setStatus(data.status ?? 'disconnected')
+      setQr(data.qr ?? null)
+      setPhone(data.phone ?? null)
+    } catch {
+      setStatus('disconnected')
+    }
+  }
+
+  useEffect(() => {
+    fetchStatus()
+  }, [])
+
+  // Poll every 3s while waiting for QR scan
+  useEffect(() => {
+    if (status !== 'qr' && status !== 'connecting') return
+    const id = setInterval(fetchStatus, 3000)
+    return () => clearInterval(id)
+  }, [status])
+
+  async function handleConnect() {
+    setWorking(true)
+    await fetch('/api/whatsapp/connect', { method: 'POST' })
+    await fetchStatus()
+    setWorking(false)
+  }
+
+  async function handleDisconnect() {
+    setWorking(true)
+    await fetch('/api/whatsapp/disconnect', { method: 'POST' })
+    setStatus('disconnected'); setQr(null); setPhone(null)
+    setWorking(false)
+  }
+
+  if (status === 'loading') return (
+    <div className="flex items-center gap-2 text-sm text-gray-400"><Loader2 className="h-5 w-5 animate-spin" /> Checking connection…</div>
+  )
+
+  if (status === 'unconfigured') return (
+    <div className="text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-4 py-3">
+      WhatsApp service is not configured. Add <code className="bg-gray-100 px-1 rounded">RAILWAY_WHATSAPP_URL</code> to your environment variables.
+    </div>
+  )
+
+  if (status === 'connected') return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2">
+        <Wifi className="h-5 w-5 shrink-0" />
+        <span className="font-medium">WhatsApp connected</span>
+        {phone && <span className="text-green-600 ml-1">· {phone}</span>}
+      </div>
+      <button onClick={handleDisconnect} disabled={working} className="btn-secondary text-red-600 hover:bg-red-50 border-red-200">
+        {working ? <Loader2 className="h-5 w-5 animate-spin" /> : <WifiOff className="h-5 w-5" />}
+        Disconnect
+      </button>
+    </div>
+  )
+
+  if (status === 'qr' && qr) return (
+    <div className="space-y-3">
+      <p className="text-sm text-gray-600">Open WhatsApp on your phone → <strong>Linked Devices</strong> → <strong>Link a device</strong> → scan this code.</p>
+      <div className="inline-block border-2 border-gray-200 rounded-xl p-3 bg-white">
+        <img src={qr} alt="WhatsApp QR Code" className="w-52 h-52" />
+      </div>
+      <p className="text-xs text-gray-400 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Waiting for scan…</p>
+    </div>
+  )
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
+        <WifiOff className="h-5 w-5 shrink-0" />
+        <span>Not connected</span>
+      </div>
+      <button onClick={handleConnect} disabled={working} className="btn-primary">
+        {working ? <Loader2 className="h-5 w-5 animate-spin" /> : <Smartphone className="h-5 w-5" />}
+        Connect WhatsApp
       </button>
     </div>
   )
@@ -440,6 +531,13 @@ export default function SettingsPage() {
         {myRole === 'owner' && (
           <Section title="Business Details" description="Salon name, tagline, and contact info used on receipts, certificates, and documents.">
             <BusinessSection />
+          </Section>
+        )}
+
+        {/* WhatsApp Connection */}
+        {myRole === 'owner' && (
+          <Section title="WhatsApp" description="Connect a WhatsApp number to send appointment reminders and automated messages to clients.">
+            <WhatsAppSection />
           </Section>
         )}
 
