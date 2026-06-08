@@ -91,6 +91,11 @@ export function AppointmentsView({
   }
   function sortApts(list: Apt[]): Apt[] {
     return [...list].sort((a, b) => {
+      const aFuture = a.date > todayStr
+      const bFuture = b.date > todayStr
+      if (aFuture && bFuture) return a.date.localeCompare(b.date)
+      if (aFuture)  return 1
+      if (bFuture)  return -1
       if (a.date !== b.date)           return b.date.localeCompare(a.date)
       if (a.startTime !== b.startTime) return b.startTime.localeCompare(a.startTime)
       return (STATUS_RANK[a.status] ?? 3) - (STATUS_RANK[b.status] ?? 3)

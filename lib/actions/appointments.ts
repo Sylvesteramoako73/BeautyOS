@@ -36,15 +36,20 @@ export async function getAppointments(filters?: {
     results = results.filter(a => a.status === filters.status)
   }
 
-  // Primary: date descending (today first, oldest last).
-  // Secondary: within the same date, time descending (latest first).
-  // Tertiary: status rank to differentiate same date+time.
+  // Today + past: descending (today first, then yesterday, day before…)
+  // Future dates: ascending at the bottom (nearest upcoming first)
   const STATUS_RANK: Record<string, number> = {
     'in-progress': 0, confirmed: 1, pending: 2,
     'no-show': 3, completed: 4, cancelled: 5,
   }
+  const today = new Date().toISOString().split('T')[0]
   return results.sort((a, b) => {
-    if (a.date !== b.date)           return b.date.localeCompare(a.date)
+    const aFuture = a.date > today
+    const bFuture = b.date > today
+    if (aFuture && bFuture) return a.date.localeCompare(b.date)   // both future → nearest first
+    if (aFuture)  return 1                                          // a future → goes below b
+    if (bFuture)  return -1                                         // b future → goes below a
+    if (a.date !== b.date)           return b.date.localeCompare(a.date)      // past → newest first
     if (a.startTime !== b.startTime) return b.startTime.localeCompare(a.startTime)
     return (STATUS_RANK[a.status] ?? 3) - (STATUS_RANK[b.status] ?? 3)
   })
