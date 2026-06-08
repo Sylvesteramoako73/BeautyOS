@@ -85,10 +85,14 @@ export function AppointmentsView({
   salonSettings?: SalonSettings
   apprentices?: Apprentice[]
 }) {
+  const todayStr     = new Date().toISOString().split('T')[0]
+  const yesterdayStr = new Date(Date.now() - 864e5).toISOString().split('T')[0]
+
   const STATUS_RANK: Record<string, number> = {
     'in-progress': 0, confirmed: 1, pending: 2,
     'no-show': 3, completed: 4, cancelled: 5,
   }
+
   function sortApts(list: Apt[]): Apt[] {
     return [...list].sort((a, b) => {
       const aFuture = a.date > todayStr
@@ -100,6 +104,12 @@ export function AppointmentsView({
       if (a.startTime !== b.startTime) return b.startTime.localeCompare(a.startTime)
       return (STATUS_RANK[a.status] ?? 3) - (STATUS_RANK[b.status] ?? 3)
     })
+  }
+
+  function dateLabel(dateStr: string) {
+    if (dateStr === todayStr)     return 'Today'
+    if (dateStr === yesterdayStr) return 'Yesterday'
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GH', { weekday: 'long', day: 'numeric', month: 'long' })
   }
 
   const [appointments, setAppointments] = useState(sortApts(initial))
@@ -116,15 +126,6 @@ export function AppointmentsView({
   const [form, setForm]           = useState(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
   const [, startTransition] = useTransition()
-
-  const todayStr     = new Date().toISOString().split('T')[0]
-  const yesterdayStr = new Date(Date.now() - 864e5).toISOString().split('T')[0]
-
-  function dateLabel(dateStr: string) {
-    if (dateStr === todayStr)     return 'Today'
-    if (dateStr === yesterdayStr) return 'Yesterday'
-    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GH', { weekday: 'long', day: 'numeric', month: 'long' })
-  }
 
   function exportCSV() {
     const rows = [
