@@ -35,6 +35,16 @@ async function sendSMS(to: string, body: string): Promise<SendResult> {
   }
 }
 
+// ── Phone number normalisation ────────────────────────────────────────────────
+// Converts local Ghanaian format (0XX…) to international (233XX…).
+// Strips all non-digits then applies country-code logic.
+function normalizePhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '')
+  if (digits.startsWith('0') && digits.length === 10) return '233' + digits.slice(1)
+  if (digits.startsWith('233')) return digits
+  return digits
+}
+
 // ── WhatsApp via Railway (Baileys) ────────────────────────────────────────────
 
 async function sendWhatsAppViaRailway(to: string, body: string): Promise<SendResult> {
@@ -46,7 +56,7 @@ async function sendWhatsAppViaRailway(to: string, body: string): Promise<SendRes
     const res = await fetch(`${baseUrl}/api/whatsapp/send`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId, number: to, message: body }),
+      body: JSON.stringify({ sessionId, number: normalizePhone(to), message: body }),
       signal:  AbortSignal.timeout(8000),
     })
     const data = await res.json() as any
