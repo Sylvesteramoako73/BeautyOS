@@ -4,10 +4,7 @@ import Image from 'next/image'
 import { Eye, EyeOff, ArrowRight, Loader2, Check } from 'lucide-react'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { useRouter } from 'next/navigation'
-
 export default function LoginPage() {
-  const router = useRouter()
   const [tab, setTab]           = useState<'signin' | 'signup'>('signin')
 
   // Sign in state
@@ -42,7 +39,7 @@ export default function LoginPage() {
         body: JSON.stringify({ idToken: freshToken }),
       })
       if (!res.ok) throw new Error('Session creation failed')
-      router.push('/')
+      window.location.href = '/'
     } catch (err: any) {
       const code = err?.code ?? ''
       if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential')
@@ -78,7 +75,7 @@ export default function LoginPage() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken: freshToken }),
       })
-      router.push('/')
+      window.location.href = '/'
     } catch (err: any) {
       setSuError(err.message ?? 'Something went wrong.')
       setSuLoading(false)
