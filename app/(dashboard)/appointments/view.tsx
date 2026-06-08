@@ -112,7 +112,16 @@ export function AppointmentsView({
   const [submitting, setSubmitting] = useState(false)
   const [, startTransition] = useTransition()
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr     = new Date().toISOString().split('T')[0]
+  const yesterdayStr = new Date(Date.now() - 864e5).toISOString().split('T')[0]
+  const twoDaysAgoStr = new Date(Date.now() - 2 * 864e5).toISOString().split('T')[0]
+
+  function dateLabel(dateStr: string) {
+    if (dateStr === todayStr)      return 'Today'
+    if (dateStr === yesterdayStr)  return 'Yesterday'
+    if (dateStr === twoDaysAgoStr) return 'Day Before Yesterday'
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GH', { weekday: 'long', day: 'numeric', month: 'long' })
+  }
 
   function exportCSV() {
     const rows = [
@@ -386,7 +395,7 @@ export function AppointmentsView({
                 return filtered.flatMap(apt => {
                   const dateChanged = apt.date !== lastDate
                   if (dateChanged) lastDate = apt.date
-                  const label = apt.date === todayStr ? 'Today' : apt.date
+                  const label = dateLabel(apt.date)
                   const done  = apt.status === 'completed' || apt.status === 'cancelled'
                   const rows = []
                   if (dateChanged) {
