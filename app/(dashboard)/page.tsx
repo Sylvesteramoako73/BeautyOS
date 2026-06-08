@@ -28,7 +28,7 @@ export default async function DashboardPage() {
   const [stats, todayApts, staffList] = await Promise.all([
     getDashboardStats(activeLocationId),
     getTodayAppointments(activeLocationId),
-    getStaffWithStats(),
+    getStaffWithStats(activeLocationId),
   ])
 
   const today = new Date().toLocaleDateString('en-GH', { weekday: 'long', day: 'numeric', month: 'long' })

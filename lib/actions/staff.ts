@@ -5,23 +5,27 @@ import { StaffSchema } from '@/lib/validation'
 import { getTenantId } from '@/lib/auth'
 import type { Staff, StaffWithStats } from '@/lib/types'
 
-export async function getStaff(): Promise<Staff[]> {
+export async function getStaff(locationId?: string | null): Promise<Staff[]> {
   const tenantId = await getTenantId()
   if (!tenantId) return []
   const snap = await adminDb.collection('staff')
     .where('tenantId', '==', tenantId)
     .get()
-  return snap.docs.map(d => docData(d) as Staff).filter(s => s.isActive).sort((a, b) => a.name.localeCompare(b.name))
+  return snap.docs
+    .map(d => docData(d) as Staff)
+    .filter(s => s.isActive)
+    .filter(s => !locationId || s.locationId === locationId)
+    .sort((a, b) => a.name.localeCompare(b.name))
 }
 
-export async function getStaffWithStats(): Promise<StaffWithStats[]> {
+export async function getStaffWithStats(locationId?: string | null): Promise<StaffWithStats[]> {
   const tenantId = await getTenantId()
   if (!tenantId) return []
   const today      = new Date().toISOString().split('T')[0]
   const now        = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
 
-  const staff = await getStaff()
+  const staff = await getStaff(locationId)
 
   // Fetch all appointments for tenant then filter in memory — avoids compound where clauses
   const apptSnap = await adminDb.collection('appointments')
