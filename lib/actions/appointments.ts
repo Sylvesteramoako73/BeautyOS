@@ -36,16 +36,16 @@ export async function getAppointments(filters?: {
     results = results.filter(a => a.status === filters.status)
   }
 
-  // Primary: date ascending, time ascending — so appointments run chronologically.
-  // Secondary: within the same date+time slot, status differentiates
-  // (in-progress → confirmed → pending → no-show → completed → cancelled).
+  // Primary: date descending (today first, oldest last).
+  // Secondary: within the same date, time descending (latest first).
+  // Tertiary: status rank to differentiate same date+time.
   const STATUS_RANK: Record<string, number> = {
     'in-progress': 0, confirmed: 1, pending: 2,
     'no-show': 3, completed: 4, cancelled: 5,
   }
   return results.sort((a, b) => {
-    if (a.date !== b.date)      return a.date.localeCompare(b.date)
-    if (a.startTime !== b.startTime) return a.startTime.localeCompare(b.startTime)
+    if (a.date !== b.date)           return b.date.localeCompare(a.date)
+    if (a.startTime !== b.startTime) return b.startTime.localeCompare(a.startTime)
     return (STATUS_RANK[a.status] ?? 3) - (STATUS_RANK[b.status] ?? 3)
   })
 }

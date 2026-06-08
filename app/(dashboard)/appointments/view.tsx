@@ -91,8 +91,8 @@ export function AppointmentsView({
   }
   function sortApts(list: Apt[]): Apt[] {
     return [...list].sort((a, b) => {
-      if (a.date !== b.date)           return a.date.localeCompare(b.date)
-      if (a.startTime !== b.startTime) return a.startTime.localeCompare(b.startTime)
+      if (a.date !== b.date)           return b.date.localeCompare(a.date)
+      if (a.startTime !== b.startTime) return b.startTime.localeCompare(a.startTime)
       return (STATUS_RANK[a.status] ?? 3) - (STATUS_RANK[b.status] ?? 3)
     })
   }
