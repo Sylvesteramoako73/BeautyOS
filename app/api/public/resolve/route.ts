@@ -22,19 +22,22 @@ export async function GET() {
   const doc  = snap.docs[0]
   const data = doc.data()
 
-  const settingsDoc = await adminDb.collection('settings').doc(`${doc.id}_salon`).get()
-  const settings    = settingsDoc.data() ?? {}
+  const settingsDoc = await adminDb.collection('settings').doc(doc.id).get()
+  const s           = settingsDoc.data() ?? {}
+
+  const { DEFAULT_WORKING_HOURS } = await import('@/lib/actions/settings')
 
   return NextResponse.json(
     {
-      tenantId:    doc.id,
-      slug:        data.slug,
-      salonName:   settings.salonName ?? data.name ?? 'Beauty Salon',
-      tagline:     settings.tagline   ?? '',
-      phone:       settings.phone     ?? '',
-      address:     settings.address   ?? '',
-      depositPct:  settings.depositPct  ?? 30,
-      paystackKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? '',
+      tenantId:     doc.id,
+      slug:         data.slug,
+      salonName:    s.salonName ?? data.name ?? 'Beauty Salon',
+      tagline:      s.tagline   ?? '',
+      phone:        s.phone     ?? '',
+      address:      s.address   ?? '',
+      depositPct:   s.depositPct   ?? 30,
+      paystackKey:  process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? '',
+      workingHours: s.workingHours ?? DEFAULT_WORKING_HOURS,
     },
     { headers: CORS },
   )

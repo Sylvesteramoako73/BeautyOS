@@ -12,19 +12,20 @@ const CORS = {
 }
 
 const BookSchema = z.object({
-  tenantId:   z.string().min(1).max(128).optional(),
-  serviceIds: z.array(z.string().min(1).max(128)).min(1).max(10),
-  staffId:    z.string().min(1).max(128),
-  locationId: z.string().max(128).optional().nullable(),
-  date:       z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  startTime:  z.string().regex(/^\d{2}:\d{2}$/),
-  name:       z.string().min(1).max(100).trim(),
-  phone:      z.string().min(7).max(20).regex(/^[\d\s\+\-\(\)]+$/),
-  email:      z.string().email().max(200).optional().or(z.literal('')),
+  tenantId:      z.string().min(1).max(128).optional(),
+  serviceIds:    z.array(z.string().min(1).max(128)).min(1).max(10),
+  staffId:       z.string().min(1).max(128),
+  locationId:    z.string().max(128).optional().nullable(),
+  date:          z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  startTime:     z.string().regex(/^\d{2}:\d{2}$/),
+  name:          z.string().min(1).max(100).trim(),
+  phone:         z.string().min(7).max(20).regex(/^[\d\s\+\-\(\)]+$/),
+  email:         z.string().email().max(200).optional().or(z.literal('')),
   notes:         z.string().max(500).optional(),
   depositPaid:   z.boolean().optional(),
   depositAmount: z.number().min(0).optional(),
   paystackRef:   z.string().max(200).optional(),
+  bookingRef:    z.string().max(100).optional(),
 })
 
 export async function OPTIONS() {
@@ -33,7 +34,7 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const { allowed } = rateLimit(`book:${ip}`, 5, 60_000) // 5 bookings per minute per IP
+  const { allowed } = rateLimit(`book:${ip}`, 5, 60_000)
   if (!allowed) return NextResponse.json({ error: 'Too many requests. Please try again shortly.' }, { status: 429 })
 
   try {
@@ -43,7 +44,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: parsed.error.errors[0]?.message ?? 'Invalid input' }, { status: 400, headers: CORS })
     }
     const { tenantId, serviceIds, staffId, locationId, date, startTime, name, phone, email, notes,
-            depositPaid, depositAmount, paystackRef } = parsed.data
+            depositPaid, depositAmount, paystackRef, bookingRef } = parsed.data
+
+    // Idempotency — if Paystack succeeded but the network dropped, return the existing booking
+    if (bookingRef) {
+      const existing = await adminDb.collection('appointments')
+        .where('bookingRef', '==', bookingRef).limit(1).get()
+      if (!existing.empty) {
+        return NextResponse.json({ id: existing.docs[0].id }, { headers: CORS })
+      }
+    }
 
     // Fetch services
     const serviceSnaps = await Promise.all(
@@ -63,43 +73,72 @@ export async function POST(req: NextRequest) {
       const staffDoc = await adminDb.collection('staff').doc(staffId).get()
       staffName      = staffDoc.data()?.name ?? 'Staff'
     } else {
-      // Pick first available staff
-      const staffSnap    = await adminDb.collection('staff').where('isActive', '==', true).get()
-      const available    = staffSnap.docs.filter(d => d.data().isAvailable)
-      const picked       = available[0] ?? staffSnap.docs[0]
-      resolvedStaffId    = picked?.id ?? ''
-      staffName          = picked?.data()?.name ?? 'Staff'
+      const staffSnap = await adminDb.collection('staff').where('isActive', '==', true).get()
+      const available = staffSnap.docs.filter(d => d.data().isAvailable)
+      const picked    = available[0] ?? staffSnap.docs[0]
+      resolvedStaffId = picked?.id ?? ''
+      staffName       = picked?.data()?.name ?? 'Staff'
+    }
+
+    // Double-booking check — query same staff + date, check overlap in memory
+    if (resolvedStaffId) {
+      const snap = await adminDb.collection('appointments')
+        .where('staffId', '==', resolvedStaffId)
+        .where('date',    '==', date)
+        .where('status',  'in', ['pending', 'confirmed'])
+        .get()
+
+      const [sh, sm] = startTime.split(':').map(Number)
+      const newStart = sh * 60 + sm
+      const newEnd   = newStart + duration
+
+      const conflict = snap.docs.some(doc => {
+        const a = doc.data()
+        const [ah, am] = (a.startTime as string).split(':').map(Number)
+        const aStart   = ah * 60 + am
+        const aEnd     = aStart + (a.duration as number ?? 0)
+        return newStart < aEnd && newEnd > aStart
+      })
+
+      if (conflict) {
+        return NextResponse.json(
+          { error: 'This time slot is no longer available. Please choose a different time.' },
+          { status: 409, headers: CORS },
+        )
+      }
     }
 
     // Compute end time
-    const [h, m]   = startTime.split(':').map(Number)
-    const endMin   = h * 60 + m + duration
-    const endTime  = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`
-    const now      = new Date().toISOString()
+    const [h, m]  = startTime.split(':').map(Number)
+    const endMin  = h * 60 + m + duration
+    const endTime = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`
+    const now     = new Date().toISOString()
 
-    // Create appointment with status "pending" (booking request)
     const ref = adminDb.collection('appointments').doc()
     await ref.set({
-      tenantId:    tenantId ?? null,
-      clientId:    '',
-      clientName:  name,
-      clientPhone: phone,
-      staffId:     resolvedStaffId,
+      tenantId:      tenantId ?? null,
+      clientId:      '',
+      clientName:    name,
+      clientPhone:   phone,
+      staffId:       resolvedStaffId,
       staffName,
-      locationId:  locationId ?? null,
-      roomId: null, roomName: null,
+      locationId:    locationId ?? null,
+      roomId: null,  roomName: null,
       date, startTime, endTime, duration,
-      totalPrice, status: 'pending', paymentStatus: 'pending',
-      notes: notes || null, services,
+      totalPrice,
+      status:        'pending',
+      paymentStatus: depositPaid ? 'partial' : 'pending',
+      notes:         notes || null,
+      services,
       isOnlineBooking: true,
-      bookerEmail: email || null,
+      bookerEmail:   email  || null,
       depositPaid:   depositPaid   ?? false,
       depositAmount: depositAmount ?? 0,
       paystackRef:   paystackRef   ?? null,
+      bookingRef:    bookingRef    ?? null,
       createdAt: now, updatedAt: now,
     })
 
-    // Notify staff/owner dashboard
     await createNotification({
       type:  'booking_request',
       title: 'New Booking Request',
@@ -107,17 +146,20 @@ export async function POST(req: NextRequest) {
       link:  '/appointments',
     })
 
-    // SMS confirmation to client (fire-and-forget — don't fail the booking if Twilio isn't configured)
     const [hFmt, mFmt] = startTime.split(':').map(Number)
-    const ampm = hFmt >= 12 ? 'PM' : 'AM'
-    const hour = hFmt % 12 || 12
+    const ampm   = hFmt >= 12 ? 'PM' : 'AM'
+    const hour   = hFmt % 12 || 12
     const timeStr = `${hour}:${String(mFmt).padStart(2, '0')} ${ampm}`
     const svcNames = services.map(s => s.name).join(', ')
     sendMessage(
       'sms',
       phone,
-      `Hi ${name}! Your booking request at Luxe Beauty Studio has been received.\n\n📅 ${date} at ${timeStr}\n💇 ${svcNames}\n\nWe'll confirm shortly. Thank you!`,
-    ).catch(() => {})
+      `Hi ${name}! Your booking request has been received.\n\n📅 ${date} at ${timeStr}\n💇 ${svcNames}\n\nWe'll confirm shortly. Thank you!`,
+    ).then(result => {
+      if (!result.success && !result.mock) {
+        console.error(`[book] SMS to ${phone} failed:`, result.error)
+      }
+    })
 
     return NextResponse.json({ id: ref.id }, { headers: CORS })
   } catch (err: any) {

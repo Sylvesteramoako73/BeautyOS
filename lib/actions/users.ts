@@ -39,6 +39,9 @@ export async function createUserDoc(uid: string, name: string, email: string): P
 }
 
 export async function updateUserRole(uid: string, role: Role) {
+  const { getSessionUser } = await import('@/lib/auth')
+  const caller = await getSessionUser()
+  if (!caller || caller.role !== 'owner') throw new Error('Only owners can change roles')
   await col().doc(uid).update({ role })
   revalidatePath('/settings')
 }
@@ -49,6 +52,9 @@ export async function getUserRole(uid: string): Promise<Role> {
 }
 
 export async function deleteUserAccount(uid: string) {
+  const { getSessionUser } = await import('@/lib/auth')
+  const caller = await getSessionUser()
+  if (!caller || caller.role !== 'owner') throw new Error('Only owners can delete accounts')
   await Promise.all([
     adminAuth.deleteUser(uid),
     col().doc(uid).delete(),

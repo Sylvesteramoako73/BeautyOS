@@ -327,6 +327,106 @@ function BusinessSection() {
   )
 }
 
+type DayHours    = { open: string; close: string; closed: boolean }
+type WorkingHours = { monday: DayHours; tuesday: DayHours; wednesday: DayHours; thursday: DayHours; friday: DayHours; saturday: DayHours; sunday: DayHours }
+
+const DAYS: Array<{ key: keyof WorkingHours; label: string }> = [
+  { key: 'monday',    label: 'Monday'    },
+  { key: 'tuesday',   label: 'Tuesday'   },
+  { key: 'wednesday', label: 'Wednesday' },
+  { key: 'thursday',  label: 'Thursday'  },
+  { key: 'friday',    label: 'Friday'    },
+  { key: 'saturday',  label: 'Saturday'  },
+  { key: 'sunday',    label: 'Sunday'    },
+]
+
+const DEFAULT_HOURS: WorkingHours = {
+  monday:    { open: '08:00', close: '18:00', closed: false },
+  tuesday:   { open: '08:00', close: '18:00', closed: false },
+  wednesday: { open: '08:00', close: '18:00', closed: false },
+  thursday:  { open: '08:00', close: '18:00', closed: false },
+  friday:    { open: '08:00', close: '18:00', closed: false },
+  saturday:  { open: '08:00', close: '16:00', closed: false },
+  sunday:    { open: '08:00', close: '16:00', closed: true  },
+}
+
+function WorkingHoursSection() {
+  const [hours, setHours]   = useState<WorkingHours>(DEFAULT_HOURS)
+  const [loading, setLoad]  = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg]       = useState('')
+
+  useEffect(() => {
+    fetch('/api/settings/salon')
+      .then(r => r.json())
+      .then(d => { setHours(d.workingHours ?? DEFAULT_HOURS); setLoad(false) })
+  }, [])
+
+  function update(day: keyof WorkingHours, field: keyof DayHours, value: string | boolean) {
+    setHours(prev => ({ ...prev, [day]: { ...prev[day], [field]: value } }))
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true); setMsg('')
+    await fetch('/api/settings/salon', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workingHours: hours }),
+    })
+    setMsg('Saved.')
+    setSaving(false)
+  }
+
+  if (loading) return <div className="flex items-center gap-2 text-sm text-gray-400"><Loader2 className="h-5 w-5 animate-spin" /> Loading…</div>
+
+  return (
+    <form onSubmit={handleSave} className="space-y-3">
+      <div className="border border-gray-200 rounded-xl divide-y divide-gray-100 overflow-hidden">
+        {DAYS.map(({ key, label }) => {
+          const d = hours[key]
+          return (
+            <div key={String(key)} className={`flex flex-wrap items-center gap-3 px-4 py-3 ${d.closed ? 'bg-gray-50' : ''}`}>
+              <label className="flex items-center gap-2 w-32 shrink-0 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={!d.closed}
+                  onChange={e => update(key, 'closed', !e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                />
+                <span className={`text-sm font-medium ${d.closed ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{label}</span>
+              </label>
+              <div className={`flex items-center gap-2 transition-opacity ${d.closed ? 'opacity-30 pointer-events-none' : ''}`}>
+                <input
+                  type="time"
+                  value={d.open}
+                  onChange={e => update(key, 'open', e.target.value)}
+                  className="form-input h-9 text-sm py-1"
+                />
+                <span className="text-xs text-gray-400">to</span>
+                <input
+                  type="time"
+                  value={d.close}
+                  onChange={e => update(key, 'close', e.target.value)}
+                  className="form-input h-9 text-sm py-1"
+                />
+              </div>
+              {d.closed && <span className="text-xs text-gray-400 ml-auto">Closed</span>}
+            </div>
+          )
+        })}
+      </div>
+      <div className="flex items-center gap-3">
+        <button type="submit" disabled={saving} className="btn-primary">
+          {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
+          Save Hours
+        </button>
+        {msg && <p className="text-sm text-green-600">{msg}</p>}
+      </div>
+    </form>
+  )
+}
+
 export default function SettingsPage() {
   const user = auth.currentUser
 
@@ -531,6 +631,13 @@ export default function SettingsPage() {
         {myRole === 'owner' && (
           <Section title="Business Details" description="Salon name, tagline, and contact info used on receipts, certificates, and documents.">
             <BusinessSection />
+          </Section>
+        )}
+
+        {/* Working Hours */}
+        {myRole === 'owner' && (
+          <Section title="Working Hours" description="Set which days and hours your salon is open. The booking form will only show available time slots.">
+            <WorkingHoursSection />
           </Section>
         )}
 
