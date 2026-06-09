@@ -5,9 +5,17 @@ import { rateLimit } from '@/lib/rate-limit'
 import { sendMessage } from '@/lib/services/messaging'
 import { z } from 'zod'
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+}
+
 const BookSchema = z.object({
+  tenantId:   z.string().min(1).max(128).optional(),
   serviceIds: z.array(z.string().min(1).max(128)).min(1).max(10),
   staffId:    z.string().min(1).max(128),
+  locationId: z.string().max(128).optional().nullable(),
   date:       z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   startTime:  z.string().regex(/^\d{2}:\d{2}$/),
   name:       z.string().min(1).max(100).trim(),
@@ -15,6 +23,10 @@ const BookSchema = z.object({
   email:      z.string().email().max(200).optional().or(z.literal('')),
   notes:      z.string().max(500).optional(),
 })
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS })
+}
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
@@ -25,9 +37,9 @@ export async function POST(req: NextRequest) {
     const body   = await req.json()
     const parsed = BookSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.errors[0]?.message ?? 'Invalid input' }, { status: 400 })
+      return NextResponse.json({ error: parsed.error.errors[0]?.message ?? 'Invalid input' }, { status: 400, headers: CORS })
     }
-    const { serviceIds, staffId, date, startTime, name, phone, email, notes } = parsed.data
+    const { tenantId, serviceIds, staffId, locationId, date, startTime, name, phone, email, notes } = parsed.data
 
     // Fetch services
     const serviceSnaps = await Promise.all(
@@ -64,11 +76,13 @@ export async function POST(req: NextRequest) {
     // Create appointment with status "pending" (booking request)
     const ref = adminDb.collection('appointments').doc()
     await ref.set({
+      tenantId:    tenantId ?? null,
       clientId:    '',
       clientName:  name,
       clientPhone: phone,
       staffId:     resolvedStaffId,
       staffName,
+      locationId:  locationId ?? null,
       roomId: null, roomName: null,
       date, startTime, endTime, duration,
       totalPrice, status: 'pending', paymentStatus: 'pending',
@@ -98,8 +112,8 @@ export async function POST(req: NextRequest) {
       `Hi ${name}! Your booking request at Luxe Beauty Studio has been received.\n\n📅 ${date} at ${timeStr}\n💇 ${svcNames}\n\nWe'll confirm shortly. Thank you!`,
     ).catch(() => {})
 
-    return NextResponse.json({ id: ref.id })
+    return NextResponse.json({ id: ref.id }, { headers: CORS })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return NextResponse.json({ error: err.message }, { status: 500, headers: CORS })
   }
 }
