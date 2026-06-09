@@ -31,7 +31,9 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
       tagline:   data.tagline   ?? '',
       phone:     data.phone     ?? '',
       address:   data.address   ?? '',
-      email:     data.email     ?? '',
+      email:       data.email       ?? '',
+      depositPct:  data.depositPct  ?? 30,
+      paystackKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? '',
     },
     { headers: CORS },
   )

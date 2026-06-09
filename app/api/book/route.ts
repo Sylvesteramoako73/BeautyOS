@@ -21,7 +21,10 @@ const BookSchema = z.object({
   name:       z.string().min(1).max(100).trim(),
   phone:      z.string().min(7).max(20).regex(/^[\d\s\+\-\(\)]+$/),
   email:      z.string().email().max(200).optional().or(z.literal('')),
-  notes:      z.string().max(500).optional(),
+  notes:         z.string().max(500).optional(),
+  depositPaid:   z.boolean().optional(),
+  depositAmount: z.number().min(0).optional(),
+  paystackRef:   z.string().max(200).optional(),
 })
 
 export async function OPTIONS() {
@@ -39,7 +42,8 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.errors[0]?.message ?? 'Invalid input' }, { status: 400, headers: CORS })
     }
-    const { tenantId, serviceIds, staffId, locationId, date, startTime, name, phone, email, notes } = parsed.data
+    const { tenantId, serviceIds, staffId, locationId, date, startTime, name, phone, email, notes,
+            depositPaid, depositAmount, paystackRef } = parsed.data
 
     // Fetch services
     const serviceSnaps = await Promise.all(
@@ -89,6 +93,9 @@ export async function POST(req: NextRequest) {
       notes: notes || null, services,
       isOnlineBooking: true,
       bookerEmail: email || null,
+      depositPaid:   depositPaid   ?? false,
+      depositAmount: depositAmount ?? 0,
+      paystackRef:   paystackRef   ?? null,
       createdAt: now, updatedAt: now,
     })
 
