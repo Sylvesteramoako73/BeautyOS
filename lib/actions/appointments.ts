@@ -148,16 +148,24 @@ export async function updateAppointmentStatus(id: string, status: string): Promi
   const data = doc.data()!
 
   if (status === 'completed') {
-    await adminDb.collection('clients').doc(data.clientId).update({
-      totalVisits: (await adminDb.collection('clients').doc(data.clientId).get()).data()!.totalVisits + 1,
-      totalSpent:  (await adminDb.collection('clients').doc(data.clientId).get()).data()!.totalSpent + data.totalPrice,
-      lastVisitAt: now,
-      updatedAt:   now,
-    })
-    const client  = (await adminDb.collection('clients').doc(data.clientId).get()).data()!
-    const trigger = client.totalVisits === 1 ? 'new_client' : 'after_appointment'
-    const { runAutomationForEvent } = await import('@/lib/services/automation-engine')
-    await runAutomationForEvent(trigger, { appointmentId: id })
+    if (data.clientId) {
+      const clientSnap = await adminDb.collection('clients').doc(data.clientId).get()
+      const client = clientSnap.data()
+      if (client) {
+        await adminDb.collection('clients').doc(data.clientId).update({
+          totalVisits: (client.totalVisits ?? 0) + 1,
+          totalSpent:  (client.totalSpent  ?? 0) + data.totalPrice,
+          lastVisitAt: now,
+          updatedAt:   now,
+        })
+        const trigger = client.totalVisits === 0 ? 'new_client' : 'after_appointment'
+        const { runAutomationForEvent } = await import('@/lib/services/automation-engine')
+        await runAutomationForEvent(trigger, { appointmentId: id })
+      }
+    } else {
+      const { runAutomationForEvent } = await import('@/lib/services/automation-engine')
+      await runAutomationForEvent('after_appointment', { appointmentId: id })
+    }
   }
 
   if (status === 'no-show') {
@@ -222,16 +230,20 @@ export async function recordAppointmentPayment(
     }),
   ])
 
-  const clientSnap = await adminDb.collection('clients').doc(apt.clientId).get()
-  const clientData = clientSnap.data()!
-  await adminDb.collection('clients').doc(apt.clientId).update({
-    totalVisits: (clientData.totalVisits ?? 0) + 1,
-    totalSpent:  (clientData.totalSpent  ?? 0) + total,
-    lastVisitAt: nowStr,
-    updatedAt:   nowStr,
-  })
-
-  const trigger = (clientData.totalVisits ?? 0) === 0 ? 'new_client' : 'after_appointment'
+  let trigger: string = 'after_appointment'
+  if (apt.clientId) {
+    const clientSnap = await adminDb.collection('clients').doc(apt.clientId).get()
+    const clientData = clientSnap.data()
+    if (clientData) {
+      await adminDb.collection('clients').doc(apt.clientId).update({
+        totalVisits: (clientData.totalVisits ?? 0) + 1,
+        totalSpent:  (clientData.totalSpent  ?? 0) + total,
+        lastVisitAt: nowStr,
+        updatedAt:   nowStr,
+      })
+      trigger = (clientData.totalVisits ?? 0) === 0 ? 'new_client' : 'after_appointment'
+    }
+  }
   const { runAutomationForEvent } = await import('@/lib/services/automation-engine')
   await runAutomationForEvent(trigger, { appointmentId: id })
 
