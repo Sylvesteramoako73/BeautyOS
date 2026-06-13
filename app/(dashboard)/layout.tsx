@@ -8,6 +8,7 @@ import { Topbar } from '@/components/layout/topbar'
 import { ToastProvider } from '@/components/ui/toast'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { LocationProvider } from '@/components/location-provider'
+import { SessionRefresher } from '@/components/session-refresher'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser()
@@ -37,6 +38,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         lockedLocationId={user.locationId}
       >
         <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden">
+          <SessionRefresher />
           <Sidebar user={user} />
           <div className="flex-1 flex flex-col min-w-0 lg:ml-[220px]">
             {showTrialBanner && (

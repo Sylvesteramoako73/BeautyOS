@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { createUserDoc } from '@/lib/actions/users'
 import { rateLimit } from '@/lib/rate-limit'
 
-const SESSION_DURATION = 60 * 60 * 24 * 5 * 1000 // 5 days
+const SESSION_DURATION = 60 * 60 * 24 * 14 * 1000 // 14 days (Firebase maximum)
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
